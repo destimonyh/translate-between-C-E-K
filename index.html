@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photoresist & Advanced Materials Lexicon (中/英/韩专业术语词典)</title>
+    <title>Advanced Materials & Lithography Multilingual Lexicon (中·英·韩专业术语词典)</title>
     <!-- Tailwind CSS for minimalist academic styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -17,13 +17,13 @@
     <header class="bg-white border-b border-gray-200 py-6 px-4 sm:px-8">
         <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900">光刻胶与先进材料三语术语词典</h1>
-                <p class="text-xs text-gray-500 mt-1">Photoresist & Packaging Materials Multilingual Academic Lexicon (中 · 英 · 韓)</p>
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900">光刻胶与先进材料三语专业词典</h1>
+                <p class="text-xs text-gray-500 mt-1">Photoresist, Packaging & Polymer Chemistry Lexicon (中 · 英 · 韓)</p>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="exportCSV()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded border border-gray-300 font-medium flex items-center gap-1 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    导出 CSV
+                    导出全库 CSV
                 </button>
                 <button onclick="openModal()" class="text-xs bg-black hover:bg-gray-800 text-white px-3 py-2 rounded font-medium flex items-center gap-1 transition">
                     + 提交新词汇
@@ -39,22 +39,22 @@
         <div class="bg-white p-4 rounded-lg academic-border mb-6 shadow-sm">
             <div class="flex flex-col md:flex-row gap-3">
                 <div class="relative flex-grow">
-                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="搜索术语（支持 中文 / English / 한국어 / 缩写如 PAG, LMC...）" 
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="搜索术语（支持 中文 / English / 한국어 / 缩写如 PAG, LMC, EUV...）" 
                            class="w-full px-4 py-2.5 pl-10 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
                 <select id="categoryFilter" onchange="handleSearch()" class="px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black text-gray-700 bg-white">
                     <option value="ALL">全部分类 (All Categories)</option>
-                    <option value="光刻胶与光化学">光刻胶与光化学 (Photoresist)</option>
-                    <option value="先进封装与高分子">先进封装 (Packaging Materials)</option>
-                    <option value="高分子化学与合成">高分子化学与合成 (Polymer Chem)</option>
-                    <option value="工艺与放大 scale">放大与工程 (Process Scale-up)</option>
-                    <option value="结构表征与检测">结构表征与检测 (Characterization)</option>
+                    <option value="光刻胶与光化学">光刻胶与光化学 (Photoresist & PAG)</option>
+                    <option value="半导体先进封装">半导体先进封装 (Packaging Materials)</option>
+                    <option value="高分子与有机合成">高分子与有机合成 (Polymer Synthesis)</option>
+                    <option value="工艺放大与生产 scale">工艺放大与工程 (Scale-up & Pilot)</option>
+                    <option value="结构表征与仪器检测">结构表征与检测 (Characterization)</option>
                 </select>
             </div>
             <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
-                <span id="resultCount">正在加载词库...</span>
-                <span>提示：点击卡片可查看详细化学/物理解析；点击图标快速复制术语</span>
+                <span id="resultCount" class="font-semibold text-gray-700">正在加载专业词库...</span>
+                <span>💡 点击卡片可查看详细化学/物理解析；点击图标可一键复制</span>
             </div>
         </div>
 
@@ -68,7 +68,7 @@
     <div id="submitModal" class="fixed inset-0 bg-black bg-opacity-40 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-lg max-w-lg w-full p-6 academic-border shadow-lg">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-lg font-bold text-gray-900">提交/补充新术语</h3>
+                <h3 class="text-lg font-bold text-gray-900">补充/提交新术语</h3>
                 <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             <form id="newTermForm" onsubmit="handleNewTermSubmit(event)" class="space-y-3 text-sm">
@@ -95,16 +95,16 @@
                         <label class="block text-xs font-semibold text-gray-700 mb-1">专业分类</label>
                         <select id="newCat" class="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-black">
                             <option value="光刻胶与光化学">光刻胶与光化学</option>
-                            <option value="先进封装与高分子">先进封装与高分子</option>
-                            <option value="高分子化学与合成">高分子化学与合成</option>
-                            <option value="工艺与放大 scale">工艺与放大 scale</option>
-                            <option value="结构表征与检测">结构表征与检测</option>
+                            <option value="半导体先进封装">半导体先进封装</option>
+                            <option value="高分子与有机合成">高分子与有机合成</option>
+                            <option value="工艺放大与生产 scale">工艺放大与生产 scale</option>
+                            <option value="结构表征与仪器检测">结构表征与仪器检测</option>
                         </select>
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 mb-1">基础解析/原理描述 (Definition)</label>
-                    <textarea id="newDef" rows="2" class="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-black" placeholder="简要说明其化学结构、应用场景或物理过程..."></textarea>
+                    <textarea id="newDef" rows="2" class="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-black" placeholder="说明化学结构、应用场景或物理反应机理..."></textarea>
                 </div>
                 <div class="flex justify-end gap-2 pt-3">
                     <button type="button" onclick="closeModal()" class="px-4 py-1.5 border rounded text-gray-600 hover:bg-gray-50">取消</button>
@@ -121,164 +121,87 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 mt-auto">
-        Academic Materials & Photolithography Multilingual Database &copy; 2026
+        Academic Materials & Lithography Multilingual Lexicon &copy; 2026
     </footer>
 
-    <!-- JavaScript Logic & Built-in Lexicon -->
+    <!-- JavaScript & Built-in Comprehensive Database -->
     <script>
-        // Core Database
         const initialDatabase = [
-            // 光刻胶与光化学
-            {
-                en: "Photoresist",
-                zh: "光刻胶 / 感光树脂",
-                ko: "포토레지스트",
-                pron: "Po-to-re-ji-seu-teu",
-                category: "光刻胶与光化学",
-                def: "用于半导体微细图形转移的光敏高分子混合溶液，在紫外线或EUV照射下发生溶解度变化。"
-            },
-            {
-                en: "Photoacid Generator (PAG)",
-                zh: "光致产酸剂",
-                ko: "포토애시드 발생제 (광산발생제)",
-                pron: "Po-to-ae-si-deu bal-saeng-je",
-                category: "光刻胶与光化学",
-                def: "吸收光子分解并产生强酸的活性化合物，是化学放大光刻胶 (CAR) 的核心组分。"
-            },
-            {
-                en: "Base-Amplifying Polymer",
-                zh: "碱自放大聚合物",
-                ko: "염기 자가 증폭 고분자",
-                pron: "Yeom-gi ja-ga jeung-pok go-bun-ja",
-                category: "光刻胶与光化学",
-                def: "在碱催化下引发自发级联分解反应，从而大幅提升显影对比度与光敏度的聚合物。"
-            },
-            {
-                en: "Chemically Amplified Resist (CAR)",
-                zh: "化学放大光刻胶",
-                ko: "화학증폭형 포토레지스트",
-                pron: "Hwa-hak-jeung-pok-hyeong Po-to-re-ji-seu-teu",
-                category: "光刻胶与光化学",
-                def: "利用 PAG 产生的酸在 PEB 阶段催化多次脱保护反应，实现极高量子产率的光刻胶。"
-            },
-            {
-                en: "Quencher",
-                zh: "淬灭剂 / 碱性抑制剂",
-                ko: "쿼처 (염기성 억제제)",
-                pron: "Kweo-cheo",
-                category: "光刻胶与光化学",
-                def: "用于捕获未曝光区扩散酸的碱性添加剂，用以控制酸扩散距离，提升线边缘粗糙度 (LER)。"
-            },
-            {
-                en: "Non-ionic PAG",
-                zh: "非离子型光致产酸剂",
-                ko: "비이온성 광산발생제",
-                pron: "Bi-i-on-seong gwang-san-bal-saeng-je",
-                category: "光刻胶与光化学",
-                def: "如磺酸酯类 PAG，具有极佳的有机溶剂溶解性与低离子污染特性。"
-            },
+            // ==================== 1. 光刻胶与光化学 (Photoresist & PAG) ====================
+            { en: "Photoresist", zh: "光刻胶 / 感光树脂", ko: "포토레지스트", pron: "Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "转移微细图形的光敏高分子混合体系，受光照射后产生溶解度差异。" },
+            { en: "Positive Photoresist", zh: "正性光刻胶", ko: "양성 포토레지스트", pron: "Yang-seong Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "曝光区域经化学反应后可溶于显影液的光刻胶。" },
+            { en: "Negative Photoresist", zh: "负性光刻胶", ko: "음성 포토레지스트", pron: "Eum-seong Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "曝光区域发生交联固化而不溶于显影液的光刻胶。" },
+            { en: "Photoacid Generator (PAG)", zh: "光致产酸剂", ko: "포토애시드 발생제 (광산발생제)", pron: "Po-to-ae-si-deu bal-saeng-je", category: "光刻胶与光化学", def: "吸收光子后能光解产生强酸的活性化合物，用于化学放大胶。" },
+            { en: "Non-ionic PAG", zh: "非离子型光致产酸剂", ko: "비이온성 광산발생제", pron: "Bi-i-on-seong gwang-san-bal-saeng-je", category: "光刻胶与光化学", def: "如磺酸酯类产酸剂，具有极佳的有机溶剂溶解度与低金属离子污染特点。" },
+            { en: "Ionic PAG", zh: "离子型光致产酸剂", ko: "이온성 광산발생제", pron: "I-on-seong gwang-san-bal-saeng-je", category: "光刻胶与光化学", def: "如鎓盐类（锍盐/碘盐）PAG，光量子效率极高。" },
+            { en: "Chemically Amplified Resist (CAR)", zh: "化学放大光刻胶", ko: "화학증폭형 포토레지스트", pron: "Hwa-hak-jeung-pok-hyeong Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "利用酸催化级联脱保护反应，实现极高感光度的光刻胶体系。" },
+            { en: "Base-Amplifying Polymer", zh: "碱自放大聚合物", ko: "염기 자가 증폭 고분자", pron: "Yeom-gi ja-ga jeung-pok go-bun-ja", category: "光刻胶与光化学", def: "微量碱催化下引发自发级联分解反应，大幅提升显影对比度的树脂。" },
+            { en: "Quencher", zh: "淬灭剂 / 碱性抑制剂", ko: "쿼처 (염기성 억제제)", pron: "Kweo-cheo", category: "光刻胶与光化学", def: "捕获非曝光区扩散酸的碱性添加剂，用于控制酸扩散并改善 LER/LWR。" },
+            { en: "Sensitizer", zh: "增感剂 / 光敏化剂", ko: "증감제", pron: "Jeung-gam-je", category: "光刻胶与光化学", def: "吸收长波长光并将能量转移给 PAG 的显色基团分子。" },
+            { en: "Photosensitizer-assisted PAG", zh: "增感剂辅助光致产酸剂", ko: "증감제 보조 광산발생제", pron: "Jeung-gam-je bo-jo gwang-san-bal-saeng-je", category: "光刻胶与光化学", def: "通过分子间能量/电子转移提升长波长（如 365nm i-line）光解效率的体系。" },
+            { en: "i-Line Photoresist", zh: "i线光刻胶 (365nm)", ko: "i-Line 포토레지스트", pron: "i-La-in Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "适用于 365nm 汞灯光源的光刻胶，常用于厚胶与传统半导体制造。" },
+            { en: "KrF Photoresist", zh: "KrF 光刻胶 (248nm)", ko: "KrF 포토레지스트", pron: "Keu-al-e-peu Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "基于 248nm 准分子激光，聚对羟基苯乙烯 (PHS) 系化学放大光刻胶。" },
+            { en: "ArF Dry Photoresist", zh: "ArF 干法光刻胶 (193nm)", ko: "ArF 건식 포토레지스트", pron: "A-reu-e-peu geon-sik Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "基于脂环族丙烯酸酯聚合物的 193nm 深紫外光刻胶。" },
+            { en: "ArF Immersion Photoresist", zh: "ArF 浸没式光刻胶", ko: "ArF 액액(침례) 포토레지스트", pron: "A-reu-e-peu aek-sik Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "结合高折射率水介质，突破 193nm 光学极限的浸没式光刻胶。" },
+            { en: "EUV Photoresist", zh: "EUV 光刻胶 (13.5nm)", ko: "EUV 포토레지스트", pron: "E-u-vui Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "极紫外光刻胶，要求极高吸光截面、低 LER 以及高次级电子捕获效率。" },
+            { en: "Post-Exposure Bake (PEB)", zh: "曝光后烘烤", ko: "노광 후 베이크", pron: "No-gwang hu be-i-keu", category: "光刻胶与光化学", def: "促进酸催化脱保护反应并使其充分扩散的热处理工序。" },
+            { en: "Developer", zh: "显影液", ko: "현상액", pron: "Hyeon-sang-aek", category: "光刻胶与光化学", def: "用于溶解曝光或未曝光区树脂的化学溶液（通常为 2.38% TMAH 水溶液）。" },
+            { en: "Tetramethylammonium Hydroxide (TMAH)", zh: "四甲基氢氧化铵", ko: "테트라메틸암모늄 하이드록사이드 (TMAH)", pron: "Te-teu-ra-me-til-am-mo-nyum", category: "光刻胶与光化学", def: "半导体标准化无金属显影液的核心碱性成分。" },
+            { en: "Line Edge Roughness (LER)", zh: "线边缘粗糙度", ko: "라인 거칠기 (LER)", pron: "La-in geo-chil-gi", category: "光刻胶与光化学", def: "评估微细图形边缘不规则偏离度的关键指标。" },
+            { en: "Critical Dimension (CD)", zh: "关键尺寸", ko: "임계치수 (CD)", pron: "Im-gye-chi-su", category: "光刻胶与光化学", def: "微电子工艺中所能制造的最小特征几何尺寸。" },
+            { en: "Deprotection Reaction", zh: "脱保护反应", ko: "탈보호 반응", pron: "Tal-bo-ho bal-neung", category: "光刻胶与光化学", def: "树脂上的保护基在酸催化下裂解，生成亲水性羧基或酚羟基的过程。" },
+            { en: "Acid Diffusion Length", zh: "酸扩散长度", ko: "산 확산 거리", pron: "San hwak-san geo-ri", category: "光刻胶与光化学", def: "酸活性分子在烘烤过程中在薄膜内随机移动的距离。" },
+            { en: "Topcoat / Anti-Reflective Coating (BARC)", zh: "底部抗反射涂层", ko: "하부 반사방지막 (BARC)", pron: "Ha-bu ban-sa-bang-ji-mak", category: "光刻胶与光化学", def: "涂覆于光刻胶下层，消除衬底干涉与驻波效应的材料。" },
 
-            // 先进封装与高分子
-            {
-                en: "Underfill",
-                zh: "底部充填胶",
-                ko: "언더필",
-                pron: "Eon-deo-pil",
-                category: "先进封装与高分子",
-                def: "填充于芯片与基板/凸块间隙的环氧树脂材料，用于分散热应力并提高机械可靠性。"
-            },
-            {
-                en: "Liquid Molding Compound (LMC)",
-                zh: "液态塑封料",
-                ko: "액상 몰딩 컴파운드",
-                pron: "Aek-sang Mol-ding Keom-pa-un-deu",
-                category: "先进封装与高分子",
-                def: "常温下呈液态的高流动性塑封材料，适用于晶圆级封装 (WLP) 和极窄间隙填充。"
-            },
-            {
-                en: "Epoxy Molding Compound (EMC)",
-                zh: "环氧塑封料",
-                ko: "에폭시 몰딩 컴파운드",
-                pron: "E-pok-si Mol-ding Keom-pa-un-deu",
-                category: "先进封装与高分子",
-                def: "由环氧树脂、固化剂及硅微粉混合构成的半导体包封保护材料。"
-            },
-            {
-                en: "Mass Reflow Molded Underfill (MR-MUF)",
-                zh: "批量回流模塑底部充填",
-                ko: "매스 리플로우 몰디드 언더필",
-                pron: "Mae-seu Ri-peul-ro-u Mol-di-deu Eon-deo-pil",
-                category: "先进封装与高分子",
-                def: "将芯片焊接与底部充填一步完成的高阶 HBM 内存封装核心工艺材料技术。"
-            },
-            {
-                en: "Non-Conductive Film (NCF)",
-                zh: "非导电膜",
-                ko: "비도전성 필름",
-                pron: "Bi-do-jeon-seong Pil-reum",
-                category: "先进封装与高分子",
-                def: "预先贴附于晶圆上的薄膜材料，热压 Bonding 时熔融并保护微凸块连接。"
-            },
+            // ==================== 2. 半导体先进封装 (Packaging Materials) ====================
+            { en: "Underfill", zh: "底部充填胶", ko: "언더필", pron: "Eon-deo-pil", category: "半导体先进封装", def: "填充于芯片与基板/凸块间隙的液态高分子，用于消除热应力。" },
+            { en: "Liquid Molding Compound (LMC)", zh: "液态塑封料", ko: "액상 몰딩 컴파운드", pron: "Aek-sang Mol-ding Keom-pa-un-deu", category: "半导体先进封装", def: "常温呈液态、高流动性的塑封材料，适合晶圆级封装与超窄间隙。" },
+            { en: "Epoxy Molding Compound (EMC)", zh: "环氧塑封料", ko: "에폭시 몰딩 컴파운드", pron: "E-pok-si Mol-ding Keom-pa-un-deu", category: "半导体先进封装", def: "由环氧树脂、固化剂与硅微粉组成的固态芯片包封材料。" },
+            { en: "Mass Reflow Molded Underfill (MR-MUF)", zh: "批量回流模塑底部充填", ko: "매스 리플로우 몰디드 언더필", pron: "Mae-seu Ri-peul-ro-u Mol-di-deu Eon-deo-pil", category: "半导体先进封装", def: "芯片焊接与底部充填一步完成的高阶 HBM 内存封装核心技术。" },
+            { en: "Non-Conductive Film (NCF)", zh: "非导电薄膜", ko: "비도전성 필름", pron: "Bi-do-jeon-seong Pil-reum", category: "半导体先进封装", def: "预先贴附于晶圆切片上的绝缘胶膜，热压 Bonding 时熔融固化。" },
+            { en: "Fan-Out Wafer-Level Packaging (FOWLP)", zh: "扇出型晶圆级封装", ko: "팬아웃 웨이퍼 레벨 패키징", pron: "Paen-a-ut We-i-peo Re-bel Pae-ki-jing", category: "半导体先进封装", def: "无需有机基板，直接在晶圆重布线层上延伸 I/O 凸块的封装工艺。" },
+            { en: "High Bandwidth Memory (HBM)", zh: "高带宽内存", ko: "고대역폭 메모리 (HBM)", pron: "Go-dae-yeok-pok Me-mo-ri", category: "半导体先进封装", def: "利用 TSV 垂直堆叠 DRAM 芯片的高性能存储结构。" },
+            { en: "Through-Silicon Via (TSV)", zh: "硅通孔", ko: "실리콘 관통 비아 (TSV)", pron: "Sil-li-kon gwan-tong bi-a", category: "半导体先进封装", def: "穿透硅衬底建立垂直电气连接的技术。" },
+            { en: "Warpage", zh: "翘曲", ko: "휨 (워피지)", pron: "Hwim (Wo-pi-ji)", category: "半导体先进封装", def: "芯片与树脂膨胀系数 (CTE) 不匹配导致的热应力形变。" },
+            { en: "Coefficient of Thermal Expansion (CTE)", zh: "热膨胀系数", ko: "열팽창계수 (CTE)", pron: "Yeol-paeng-chang-gye-su", category: "半导体先进封装", def: "材料随温度升高的体积/长度膨胀比例。" },
+            { en: "Glass Transition Temperature (Tg)", zh: "玻璃化转变温度", ko: "유리전이온도 (Tg)", pron: "Yu-ri-jeon-i-on-do", category: "半导体先进封装", def: "高分子由高弹态向玻璃态转变的临界温度点。" },
+            { en: "Die Attach Film (DAF)", zh: "芯片粘接薄膜", ko: "다이 어태치 필름", pron: "Da-i eo-tae-chi pil-reum", category: "半导体先进封装", def: "用于将切割好的 Die 固晶粘接至导线架或基板上的胶膜。" },
+            { en: "Thermal Interface Material (TIM)", zh: "导热界面材料", ko: "열전달 물질 (TIM)", pron: "Yeol-jeon-dal mul-jil", category: "半导体先进封装", def: "填充于发热源与散热器界面、降低接触热阻的膏体或垫片。" },
 
-            // 高分子化学与合成
-            {
-                en: "Monomer",
-                zh: "单体",
-                ko: "모노머 (단량체)",
-                pron: "Mo-no-meo",
-                category: "高分子化学与合成",
-                def: "可发生聚合反应合成高分子化合物的低分子量起始原料。"
-            },
-            {
-                en: "Polymer",
-                zh: "聚合物 / 高分子",
-                ko: "폴리머 (고분자)",
-                pron: "Pol-li-meo",
-                category: "高分子化学与合成",
-                def: "由许多重复结构单元通过共价键连接而成的高相对分子质量化合物。"
-            },
-            {
-                en: "Formulation",
-                zh: "配方",
-                ko: "포뮬레이션 (배합)",
-                pron: "Po-myul-ra-e-si-eon",
-                category: "高分子化学与合成",
-                def: "树脂、产酸剂、交联剂、溶剂及添加剂按特定物理化学比例混合的配制体系。"
-            },
-            {
-                en: "Characterization",
-                zh: "表征",
-                ko: "캐릭터라이제이션 (특성분석)",
-                pron: "Kae-rik-teo-ra-i-je-i-seon",
-                category: "高分子化学与合成",
-                def: "利用仪器分析高分子的分子量分布、热性能及化学结构的过程。"
-            },
+            // ==================== 3. 高分子与有机合成 (Polymer Synthesis) ====================
+            { en: "Monomer", zh: "单体", ko: "모노머 (단량체)", pron: "Mo-no-meo", category: "高分子与有机合成", def: "合成聚合物的基本低分子量原料单元。" },
+            { en: "Polymer", zh: "聚合物 / 高分子", ko: "폴리머 (고분자)", pron: "Pol-li-meo", category: "高分子与有机合成", def: "由许多重复单元经共价键链接的高分子量化合物。" },
+            { en: "Copolymer", zh: "共聚物", ko: "공중합체", pron: "Gong-jung-hap-che", category: "高分子与有机合成", def: "由两种或多种不同单体聚合构成的聚合物。" },
+            { en: "Homopolymer", zh: "均聚物", ko: "단일중합체", pron: "Dan-il-jung-hap-che", category: "高分子与有机合成", def: "由单一重复单体构建的高分子分子链。" },
+            { en: "Radical Polymerization", zh: "自由基聚合", ko: "라디칼 중합", pron: "Ra-di-kal jung-hap", category: "高分子与有机合成", def: "利用自由基活性中心引发单体增长的连锁聚合。" },
+            { en: "Addition Polymerization", zh: "加聚反应", ko: "부가 중합", pron: "Bu-ga jung-hap", category: "高分子与有机合成", def: "不脱除副产物、单体分子双键打开相互链接的反应。" },
+            { en: "Condensation Polymerization", zh: "缩聚反应", ko: "축합 중합", pron: "Chuk-hap jung-hap", category: "高分子与有机合成", def: "高分子生成过程中脱除水、醇等小分子的聚合反应。" },
+            { en: "Vinylcyclopropane", zh: "乙烯基环丙烷", ko: "비닐사이클로프로판", pron: "Bi-nil-sa-i-keul-ro-peu-ro-pan", category: "高分子与有机合成", def: "能发生自由基开环聚合 (AROP) 的张力环单体。" },
+            { en: "Hydrogen Atom Transfer (HAT)", zh: "氢原子转移", ko: "수소 원자 이동", pron: "Su-so won-ja i-dong", category: "高分子与有机合成", def: "自由基反应中关键的分子内或分子间氢自由基迁移过程。" },
+            { en: "Alpha-Olefin", zh: "α-烯烃", ko: "알파-올레핀", pron: "Al-pa-ol-le-pin", category: "高分子与有机合成", def: "端基含有双键的直链烯烃单体。" },
+            { en: "Functionalization", zh: "官能团化 / 改性", ko: "기능화 (관능기 도입)", pron: "Gi-neung-hwa", category: "高分子与有机合成", def: "在高分子骨架或侧链上引入特定化学活性基团的过程。" },
+            { en: "Crosslinking", zh: "交联", ko: "가교 (가교 반응)", pron: "Ga-gyo", category: "高分子与有机合成", def: "分子链之间建立化学键线形成三维网状结构的过程。" },
+            { en: "Initiator", zh: "引发剂", ko: "개시제", pron: "Gae-si-je", category: "高分子与有机合成", def: "分解产生活性中心（自由基/阴阳离子）引发聚合的化合物。" },
 
-            // 工艺与放大 (Scale-up)
-            {
-                en: "Lab-scale",
-                zh: "小试",
-                ko: "랩 스케일 (실험실 규모)",
-                pron: "Raeb Seu-ke-il",
-                category: "工艺与放大 scale",
-                def: "实验室级别的克级/百克级合成与配方研发阶段。"
-            },
-            {
-                en: "Pilot-scale",
-                zh: "中试",
-                ko: "파일럿 스케일 (시험 공정)",
-                pron: "Pa-il-reot Seu-ke-il",
-                category: "工艺与放大 scale",
-                def: "介于实验室小试与工业化大生产之间的公斤级放大验证阶段。"
-            },
-            {
-                en: "Senior Researcher",
-                zh: "高级研究员",
-                ko: "수석 연구원 / 선임 연구원",
-                pron: "Su-seok Yeon-gu-won",
-                category: "工艺与放大 scale",
-                def: "资深研发人员职称。"
-            }
+            // ==================== 4. 工艺放大与生产 (Scale-up & Pilot) ====================
+            { en: "Lab-scale", zh: "小试 (实验室规模)", ko: "랩 스케일 (실험실 규모)", pron: "Raeb Seu-ke-il", category: "工艺放大与生产 scale", def: "实验室毫克至百克级的路线探索与机理验证阶段。" },
+            { en: "Pilot-scale", zh: "中试 (试验线规模)", ko: "파일럿 스케일 (시험 공정)", pron: "Pa-il-reot Seu-ke-il", category: "工艺放大与生产 scale", def: "介于小试与量产之间的公斤级工艺放大与稳定性测试。" },
+            { en: "Commercial Production / Industrial-scale", zh: "工业化大生产 / 量产", ko: "상업화 (양산 규모)", pron: "Sang-eop-hwa (Yang-san)", category: "工艺放大与生产 scale", def: "吨级工业化持续稳定生产阶段。" },
+            { en: "Formulation", zh: "配方", ko: "포뮬레이션 (배합)", pron: "Po-myul-ra-e-si-eon", category: "工艺放大与生产 scale", def: "将树脂、产酸剂、溶剂及添加剂精准混合的配制工艺。" },
+            { en: "Senior Researcher", zh: "高级研究员", ko: "수석/선임 연구원", pron: "Su-seok / Seon-im Yeon-gu-won", category: "工艺放大与生产 scale", def: "半导体材料企业或研究所资深研发专家。" },
+            { en: "Cleanroom Class 1000", zh: "1000级洁净室", ko: "클린룸 1000클래스", pron: "Keul-rin-rum Cheon Keul-rae-seu", category: "工艺放大与生产 scale", def: "每立方英尺大于 0.5 微米微粒少于 1000 个的高洁净实验室环境。" },
+            { en: "Yield Rate", zh: "良率 / 产率", ko: "수율", pron: "Su-yul", category: "工艺放大与生产 scale", def: "符合品质规范合格产物占理论总量的百分比。" },
+            { en: "Quality Control (QC)", zh: "质量控制", ko: "품질 관리 (QC)", pron: "Pum-jil gwan-ri", category: "工艺放大与生产 scale", def: "原料、半成品及终产物的杂质与性能监控检测。" },
+
+            // ==================== 5. 结构表征与检测 (Characterization) ====================
+            { en: "Gel Permeation Chromatography (GPC)", zh: "凝胶渗透色谱", ko: "젤 침투 크로마토그래피 (GPC)", pron: "Jel chim-tu Keu-ro-ma-to-geu-rae-pi", category: "结构表征与仪器检测", def: "测定聚合物分子量 (Mw/Mn) 及多分散性指数 (PDI) 的关键仪器。" },
+            { en: "Nuclear Magnetic Resonance (NMR)", zh: "核磁共振波谱", ko: "핵마그네틱 공명 (NMR)", pron: "Haek-ma-geu-ne-tik Gong-myeong", category: "结构表征与仪器检测", def: "解析高分子及单体氢谱(1H)/碳谱(13C)微观结构的手段。" },
+            { en: "Thermogravimetric Analysis (TGA)", zh: "热重分析", ko: "열무량 분석 (TGA)", pron: "Yeol-mu-ryang Bun-seok", category: "结构表征与仪器检测", def: "测量材料质量随温度变化，评估耐热性与分解温度 (Td)。" },
+            { en: "Differential Scanning Calorimetry (DSC)", zh: "差示扫描量热法", ko: "시차 스캐닝 열량계 (DSC)", pron: "Si-cha Seu-kae-ning Yeol-ryang-gye", category: "结构表征与仪器检测", def: "测定聚合物 Tg、熔点 (Tm) 及结晶热能变化的仪器。" },
+            { en: "Fourier-Transform Infrared (FTIR)", zh: "傅里叶变换红外光谱", ko: "푸리에 변환 적외선 분광학 (FTIR)", pron: "Pu-ri-e Byeon-hwan Jeok-oe-seon", category: "结构表征与仪器检测", def: "鉴定高分子侧链官能团与化学键特征吸收峰。" },
+            { en: "Scanning Electron Microscopy (SEM)", zh: "扫描电子显微镜", ko: "주사 전자 현미경 (SEM)", pron: "Ju-sa Jeon-ja Hyeon-mi-gyeong", category: "结构表征与仪器检测", def: "观察光刻胶图案截面与高分子微观形貌的超高分辨仪器。" },
+            { en: "Atomic Force Microscopy (AFM)", zh: "原子力显微镜", ko: "원자력 현미경 (AFM)", pron: "Won-ja-ryeok Hyeon-mi-gyeong", category: "结构表征与仪器检测", def: "检测薄膜表面纳米级粗糙度的三维成像设备。" },
+            { en: "Polydispersity Index (PDI)", zh: "多分散性指数", ko: "다분산 지수 (PDI)", pron: "Da-bun-san ji-su", category: "结构表征与仪器检测", def: "评估聚合物分子量分布宽窄的参数 (Mw/Mn)。" }
         ];
 
         let database = [...initialDatabase];
@@ -294,22 +217,22 @@
 
         function renderList(items) {
             const container = document.getElementById('dictionaryList');
-            document.getElementById('resultCount').innerText = `共找到 ${items.length} 条专业术语`;
+            document.getElementById('resultCount').innerText = `共匹配到 ${items.length} 条专业术语`;
             
             if (items.length === 0) {
                 container.innerHTML = `<div class="text-center py-12 text-gray-400 bg-white academic-border rounded">未匹配到相关术语</div>`;
                 return;
             }
 
-            container.innerHTML = items.map((item, index) => `
+            container.innerHTML = items.map((item) => `
                 <div class="bg-white rounded academic-border p-4 hover:shadow-md transition">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-gray-100 pb-2 mb-2">
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="font-bold text-lg text-gray-900">${item.en}</span>
                             <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">${item.category}</span>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="copyToClipboard('${item.en} | ${item.zh} | ${item.ko}')" title="复制完整词条" class="text-xs text-gray-500 hover:text-black border px-2 py-1 rounded bg-gray-50">
+                            <button onclick="copyToClipboard('${item.en} | ${item.zh} | ${item.ko}')" title="复制三语术语" class="text-xs text-gray-500 hover:text-black border px-2 py-1 rounded bg-gray-50">
                                 📋 复制三语
                             </button>
                         </div>
@@ -375,7 +298,7 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Photoresist_Multilingual_Lexicon.csv");
+            link.setAttribute("download", "Photoresist_and_Materials_Lexicon.csv");
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -397,7 +320,6 @@
 
             database.unshift(newTerm);
             
-            // Save local entries
             const customTerms = JSON.parse(localStorage.getItem('custom_terms') || '[]');
             customTerms.unshift(newTerm);
             localStorage.setItem('custom_terms', JSON.stringify(customTerms));
@@ -405,10 +327,10 @@
             handleSearch();
             closeModal();
             document.getElementById('newTermForm').reset();
-            copyToClipboard("新术语已保存至本地词库！");
+            copyToClipboard("新术语已成功保存至您的词库！");
         }
 
-        // Initialize
+        // Initial Load
         renderList(database);
     </script>
 </body>
