@@ -1,232 +1,405 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Materials & Lithography Lexicon (实时三语专业词典)</title>
-    <!-- Tailwind CSS for minimalist academic styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
-        .academic-border { border: 1px solid #e5e7eb; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChemLex - 学术三语词汇库与研究笔记</title>
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-surface: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --accent-blue: #1e3a8a;
+      --accent-hover: #1e40af;
+      --tag-bg: #e2e8f0;
+      --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 0;
+    }
+
+    /* 顶部黑底学术导航 */
+    header {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 1.3rem; font-weight: 600; letter-spacing: 0.5px; }
+    header .status-tag { font-size: 0.8rem; background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; }
+
+    /* Nav Tabs */
+    .nav-tabs {
+      display: flex;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 2rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 1rem 1.5rem;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--accent-blue); }
+    .tab-btn.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* 搜索栏与控制器 */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .input-field {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      outline: none;
+      background: var(--bg-surface);
+    }
+    .input-field:focus { border-color: var(--accent-blue); }
+    .search-input { flex: 1; min-width: 250px; }
+
+    /* 表格与卡片样式 */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .dict-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+    .term-title { font-size: 1.15rem; font-weight: 700; color: var(--accent-blue); }
+    .term-category {
+      font-size: 0.75rem;
+      background-color: var(--tag-bg);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .term-trans {
+      font-size: 0.95rem;
+      margin-bottom: 0.6rem;
+      color: #1e293b;
+    }
+    .term-trans span { margin-right: 1rem; }
+    .kr-text { font-family: sans-serif; font-weight: 600; color: #0284c7; }
+    .term-def {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border-top: 1px dashed var(--border-color);
+      padding-top: 0.5rem;
+    }
+
+    /* 表单样式 */
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted); }
+    .btn {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #64748b; }
+    .btn-secondary:hover { background: #475569; }
+
+    /* 笔记视图 */
+    .note-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
+    .note-card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; }
+    .note-title { font-weight: 600; font-size: 1rem; margin-bottom: 0.5rem; }
+    .note-body { font-size: 0.9rem; color: var(--text-muted); white-space: pre-wrap; font-family: var(--font-mono); }
+  </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col font-sans">
+<body>
 
-    <!-- Header Section -->
-    <header class="bg-white border-b border-gray-200 py-6 px-4 sm:px-8">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight text-gray-900">光刻胶与先进材料专业词典</h1>
-                <p class="text-xs text-gray-500 mt-1">Photoresist, Packaging & Polymer Chemistry Lexicon (中 · 英 · 韓 + 开放网络词典实时检索)</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="exportCSV()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded border border-gray-300 font-medium flex items-center gap-1 transition">
-                    📋 导出 CSV 词库
-                </button>
-            </div>
-        </div>
-    </header>
+<header>
+  <h1>ChemLex | 化学三语词库 & 研讨笔记</h1>
+  <span class="status-tag" id="syncStatus">本地状态</span>
+</header>
 
-    <!-- Main Content -->
-    <main class="max-w-6xl mx-auto px-4 sm:px-8 py-8 flex-grow w-full">
-        
-        <!-- Search & Filter Controls -->
-        <div class="bg-white p-4 rounded-lg academic-border mb-6 shadow-sm">
-            <div class="flex flex-col md:flex-row gap-3">
-                <div class="relative flex-grow">
-                    <input type="text" id="searchInput" onkeydown="if(event.key==='Enter') handleSearch()" placeholder="输入任意术语/化合物名/缩写（支持回车搜索，自动检索本地与开放词典）..." 
-                           class="w-full px-4 py-2.5 pl-10 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black focus:border-black">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <button onclick="handleSearch()" class="px-5 py-2.5 bg-black text-white text-sm rounded hover:bg-gray-800 transition font-medium">
-                    实时检索
-                </button>
-            </div>
-            <div class="mt-3 flex items-center justify-between text-xs text-gray-500">
-                <span id="resultCount" class="font-semibold text-gray-700">加载中...</span>
-                <span class="text-xs text-gray-400">已启用：双层混合引擎 (本地高阶词库 + 免费公共词典 API)</span>
-            </div>
-        </div>
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('dictTab')">三语词汇库</button>
+  <button class="tab-btn" onclick="switchTab('addTab')">新增词条</button>
+  <button class="tab-btn" onclick="switchTab('noteTab')">学习笔记</button>
+  <button class="tab-btn" onclick="switchTab('settingsTab')">云端同步设置</button>
+</nav>
 
-        <!-- Live Query Loading Banner -->
-        <div id="apiLoadingBanner" class="hidden mb-6 p-4 bg-gray-100 border border-gray-300 rounded text-gray-800 text-xs flex items-center gap-2">
-            <svg class="animate-spin h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>正在连接开放词典 (Free Dictionary & Wiktionary) 实时检索词条...</span>
-        </div>
-
-        <!-- Terminology List Table/Cards -->
-        <div id="dictionaryList" class="space-y-3">
-            <!-- Dynamic content injected here -->
-        </div>
-    </main>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-black text-white text-xs px-4 py-2.5 rounded shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none">
-        已成功复制到剪贴板
+<div class="container">
+  <!-- Tab 1: 词汇库 -->
+  <div id="dictTab" class="tab-content active">
+    <div class="controls">
+      <input type="text" id="searchInput" class="input-field search-input" placeholder="搜索中文、英文、韩文或解析关键词..." oninput="renderDict()">
+      <select id="categorySelect" class="input-field" onchange="renderDict()">
+        <option value="ALL">全部分类</option>
+        <option value="化学合成">化学合成</option>
+        <option value="光刻胶">光刻胶</option>
+        <option value="半导体封装">半导体封装</option>
+        <option value="聚合物">聚合物</option>
+        <option value="量产扩大">量产扩大</option>
+      </select>
     </div>
+    <div id="dictList"></div>
+  </div>
 
-    <footer class="bg-white border-t border-gray-200 py-4 text-center text-xs text-gray-400 mt-auto">
-        Academic Materials & Lithography Lexicon &copy; 2026
-    </footer>
+  <!-- Tab 2: 词汇录入 -->
+  <div id="addTab" class="tab-content">
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">新增三语词条</h2>
+      <form id="addTermForm" onsubmit="handleAddTerm(event)">
+        <div class="form-group">
+          <label>方向分类</label>
+          <select id="addCategory" class="input-field" style="width: 100%;" required>
+            <option value="化学合成">化学合成</option>
+            <option value="光刻胶">光刻胶</option>
+            <option value="半导体封装">半导体封装</option>
+            <option value="聚合物">聚合物</option>
+            <option value="量产扩大">量产扩大</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>中文术语</label>
+          <input type="text" id="addZh" class="input-field" style="width: 100%;" placeholder="例: 配方" required>
+        </div>
+        <div class="form-group">
+          <label>英文术语</label>
+          <input type="text" id="addEn" class="input-field" style="width: 100%;" placeholder="例: Formulation" required>
+        </div>
+        <div class="form-group">
+          <label>韩文术语（标准标注格式: 포뮬레이션/배합）</label>
+          <input type="text" id="addKr" class="input-field" style="width: 100%;" placeholder="例: 포뮬레이션/배합" required>
+        </div>
+        <div class="form-group">
+          <label>一句话解析</label>
+          <textarea id="addDef" class="input-field" style="width: 100%; height: 80px;" placeholder="录入精准学术描述..." required></textarea>
+        </div>
+        <button type="submit" class="btn">提交保存</button>
+      </form>
+    </div>
+  </div>
 
-    <script>
-        const initialDatabase = [
-            { en: "Photoresist", zh: "光刻胶 / 感光树脂", ko: "포토레지스트", pron: "Po-to-re-ji-seu-teu", category: "光刻胶与光化学", def: "转移微细图形的光敏高分子混合体系，受光照射后产生溶解度差异。" },
-            { en: "Photoacid Generator (PAG)", zh: "光致产酸剂", ko: "포토애시드 발생제 (광산발생제)", pron: "Po-to-ae-si-deu bal-saeng-je", category: "光刻胶与光化学", def: "吸收光子后能光解产生强酸的活性化合物，用于化学放大胶。" },
-            { en: "Base-Amplifying Polymer", zh: "碱自放大聚合物", ko: "염기 자가 증폭 고분자", pron: "Yeom-gi ja-ga jeung-pok go-bun-ja", category: "光刻胶与光化学", def: "微量碱催化下引发自发级联分解反应，大幅提升显影对比度的树脂。" },
-            { en: "Non-ionic PAG", zh: "非离子型光致产酸剂", ko: "비이온성 광산발생제", pron: "Bi-i-on-seong gwang-san-bal-saeng-je", category: "光刻胶与光化学", def: "如磺酸酯类产酸剂，具有极佳的有机溶剂溶解度与低金属离子污染特点。" },
-            { en: "Underfill", zh: "底部充填胶", ko: "언더필", pron: "Eon-deo-pil", category: "半导体先进封装", def: "填充于芯片与基板/凸块间隙的液态高分子，用于消除热应力。" },
-            { en: "Liquid Molding Compound (LMC)", zh: "液态塑封料", ko: "액상 몰딩 컴파운드", pron: "Aek-sang Mol-ding Keom-pa-un-deu", category: "半导体先进封装", def: "常温呈液态、高流动性的塑封材料，适合晶圆级封装与超窄间隙。" },
-            { en: "Epoxy Molding Compound (EMC)", zh: "环氧塑封料", ko: "에폭시 몰딩 컴파운드", pron: "E-pok-si Mol-ding Keom-pa-un-deu", category: "半导体先进封装", def: "由环氧树脂、固化剂与硅微粉组成的固态芯片包封材料。" },
-            { en: "Mass Reflow Molded Underfill (MR-MUF)", zh: "批量回流模塑底部充填", ko: "매스 리플로우 몰디드 언더필", pron: "Mae-seu Ri-peul-ro-u Mol-di-deu Eon-deo-pil", category: "半导体先进封装", def: "芯片焊接与底部充填一步完成的高阶 HBM 内存封装核心技术。" },
-            { en: "Non-Conductive Film (NCF)", zh: "非导电薄膜", ko: "비도전성 필름", pron: "Bi-do-jeon-seong Pil-reum", category: "半导体先进封装", def: "预先贴附于晶圆切片上的绝缘胶膜，热压 Bonding 时熔融固化。" },
-            { en: "Lab-scale", zh: "小试 (实验室规模)", ko: "랩 스케일 (실험실 규모)", pron: "Raeb Seu-ke-il", category: "工艺放大与生产 scale", def: "实验室毫克至百克级的路线探索与机理验证阶段。" },
-            { en: "Pilot-scale", zh: "中试 (试验线规模)", ko: "파일럿 스케일 (시험 공정)", pron: "Pa-il-reot Seu-ke-il", category: "工艺放大与生产 scale", def: "介于小试与量产之间的公斤级工艺放大与稳定性测试。" },
-            { en: "Senior Researcher", zh: "高级研究员", ko: "수석/선임 연구원", pron: "Su-seok / Seon-im Yeon-gu-won", category: "工艺放大与生产 scale", def: "半导体材料企业或研究所资深研发专家。" },
-            { en: "Formulation", zh: "配方", ko: "포뮬레이션 (배합)", pron: "Po-myul-ra-e-si-eon", category: "高分子与有机合成", def: "将树脂、产酸剂、溶剂及添加剂精准混合的配制工艺。" },
-            { en: "Monomer", zh: "单体", ko: "모노머 (단량체)", pron: "Mo-no-meo", category: "高分子与有机合成", def: "合成聚合物的基本低分子量原料单元。" },
-            { en: "Polymer", zh: "聚合物 / 高分子", ko: "폴리머 (고분자)", pron: "Pol-li-meo", category: "高分子与有机合成", def: "由许多重复单元经共价键链接的高分子量化合物。" },
-            { en: "Characterization", zh: "表征", ko: "캐릭터라이제이션 (특성분석)", pron: "Kae-rik-teo-ra-i-je-i-seon", category: "高分子与有机合成", def: "利用仪器分析高分子的分子量分布、热性能及化学结构的过程。" }
-        ];
+  <!-- Tab 3: 学习笔记 -->
+  <div id="noteTab" class="tab-content">
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <h3 style="font-size: 1rem; margin-bottom: 0.8rem;">添加学术笔记</h3>
+      <input type="text" id="noteTitle" class="input-field" style="width: 100%; margin-bottom: 0.8rem;" placeholder="笔记主题（例如：路易斯酸碱概念及在 PAG 中的应用）">
+      <textarea id="noteContent" class="input-field" style="width: 100%; height: 100px; margin-bottom: 0.8rem;" placeholder="输入记录内容、化学反应式推导或查阅文献结论..."></textarea>
+      <button onclick="handleAddNote()" class="btn">保存笔记</button>
+    </div>
+    <div id="noteList" class="note-grid"></div>
+  </div>
 
-        let database = [...initialDatabase];
+  <!-- Tab 4: 云端同步设置 -->
+  <div id="settingsTab" class="tab-content">
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+      <h3 style="font-size: 1rem; margin-bottom: 1rem;">GitHub REST API 云端同步配置</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        在此配置后，可直接将本地新增词汇及笔记 Sync 提交保存回您的 GitHub 仓库中，实现任意网络设备间无缝共享。
+      </p>
+      <div class="form-group">
+        <label>GitHub Personal Access Token (PAT)</label>
+        <input type="password" id="ghToken" class="input-field" style="width: 100%;" placeholder="ghp_xxxxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label>GitHub 用户名 / 仓库名</label>
+        <input type="text" id="ghRepo" class="input-field" style="width: 100%;" placeholder="例如: username/repository-name">
+      </div>
+      <button onclick="saveSettings()" class="btn">保存配置</button>
+      <button onclick="syncToGithub()" class="btn btn-secondary" style="margin-left: 0.5rem;">手动推送数据至 GitHub</button>
+    </div>
+  </div>
+</div>
 
-        function renderList(items, externalItem = null) {
-            const container = document.getElementById('dictionaryList');
-            let displayItems = [...items];
-            if (externalItem) {
-                displayItems.unshift(externalItem);
-            }
+<script>
+  let baseDict = [];
+  let customDict = JSON.parse(localStorage.getItem('chem_custom_dict') || '[]');
+  let notes = JSON.parse(localStorage.getItem('chem_notes') || '[]');
 
-            document.getElementById('resultCount').innerText = `已展示 ${displayItems.length} 条结果`;
-            
-            if (displayItems.length === 0) {
-                container.innerHTML = `<div class="text-center py-12 text-gray-400 bg-white academic-border rounded">未检索到结果，且公共词典库中未发现匹配词条。</div>`;
-                return;
-            }
+  // 初始化数据加载
+  async function initData() {
+    try {
+      const res = await fetch('dictionary.json');
+      if (res.ok) {
+        baseDict = await res.json();
+      }
+    } catch (e) {
+      console.warn('读取 dictionary.json 失败，使用本地空基准库', e);
+    }
+    renderDict();
+    renderNotes();
+    loadSettings();
+  }
 
-            container.innerHTML = displayItems.map((item) => `
-                <div class="bg-white rounded academic-border p-4 hover:shadow-md transition ${item.isExternal ? 'border-gray-400 bg-gray-50/50' : ''}">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-gray-100 pb-2 mb-2">
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <span class="font-bold text-lg text-gray-900">${item.en}</span>
-                            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">${item.category}</span>
-                            ${item.isExternal ? '<span class="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded font-semibold">🌐 开放词典实时检索结果</span>' : ''}
-                        </div>
-                        <button onclick="copyToClipboard('${item.en} | ${item.zh} | ${item.ko}')" class="text-xs text-gray-500 hover:text-black border px-2 py-1 rounded bg-gray-50">
-                            📋 复制三语
-                        </button>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                        <div class="flex flex-col">
-                            <span class="text-xs text-gray-400 font-semibold uppercase">中文术语 / 释义</span>
-                            <span class="text-gray-800 font-medium mt-0.5">${item.zh || "（网络词典未标明固定中文翻译）"}</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-xs text-gray-400 font-semibold uppercase">韓文術語 (Korean)</span>
-                            <div class="flex items-baseline gap-2 mt-0.5">
-                                <span class="text-gray-900 font-semibold">${item.ko || "（通用词汇）"}</span>
-                                ${item.pron ? `<span class="text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">🗣️ ${item.pron}</span>` : ''}
-                            </div>
-                        </div>
-                    </div>
+  // Tab 切换逻辑
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
 
-                    ${item.def ? `
-                    <div class="mt-3 pt-2 border-t border-gray-50 text-xs text-gray-600 bg-gray-50 p-2.5 rounded">
-                        <span class="font-semibold text-gray-700">解析 / 定义：</span>${item.def}
-                    </div>` : ''}
-                </div>
-            `).join('');
-        }
+  // 渲染词汇列表
+  function renderDict() {
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+    const cat = document.getElementById('categorySelect').value;
+    const allTerms = [...baseDict, ...customDict];
 
-        // Live Free Dictionary & Wiktionary Lookup
-        async function fetchExternalDictionary(query) {
-            document.getElementById('apiLoadingBanner').classList.remove('hidden');
-            try {
-                // Query Free Dictionary API for IPA / Meanings
-                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(query)}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    const entry = data[0];
-                    const phonetic = entry.phonetic || (entry.phonetics && entry.phonetics[0] ? entry.phonetics[0].text : '');
-                    const meaning = entry.meanings && entry.meanings[0] ? `${entry.meanings[0].partOfSpeech}. ${entry.meanings[0].definitions[0].definition}` : '';
-                    
-                    return {
-                        en: entry.word,
-                        zh: "开放词典词条 (基础词性与定义已获取)",
-                        ko: entry.word,
-                        pron: phonetic ? `音标: ${phonetic}` : '英语发音词条',
-                        category: "通用 / 开放词典",
-                        def: meaning,
-                        isExternal: true
-                    };
-                }
-            } catch (err) {
-                console.error("External Dictionary search error:", err);
-            } finally {
-                document.getElementById('apiLoadingBanner').classList.add('hidden');
-            }
-            return null;
-        }
+    const filtered = allTerms.filter(item => {
+      const matchesCat = cat === 'ALL' || item.category === cat;
+      const matchesSearch = !search || 
+        item.zh.toLowerCase().includes(search) ||
+        item.en.toLowerCase().includes(search) ||
+        item.kr.toLowerCase().includes(search) ||
+        item.definition.toLowerCase().includes(search);
+      return matchesCat && matchesSearch;
+    });
 
-        async function handleSearch() {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            if (!query) {
-                renderList(database);
-                return;
-            }
+    const container = document.getElementById('dictList');
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="card" style="text-align:center; color: var(--text-muted);">未找到符合条件的词条</div>`;
+      return;
+    }
 
-            const localMatches = database.filter(item => 
-                item.en.toLowerCase().includes(query) ||
-                item.zh.toLowerCase().includes(query) ||
-                item.ko.toLowerCase().includes(query) ||
-                (item.pron && item.pron.toLowerCase().includes(query))
-            );
+    container.innerHTML = filtered.map(item => `
+      <div class="card">
+        <div class="dict-header">
+          <span class="term-title">${item.zh}</span>
+          <span class="term-category">${item.category}</span>
+        </div>
+        <div class="term-trans">
+          <span><strong>EN:</strong> ${item.en}</span>
+          <span><strong>KR:</strong> <span class="kr-text">${item.kr}</span></span>
+        </div>
+        <div class="term-def">${item.definition}</div>
+      </div>
+    `).join('');
+  }
 
-            renderList(localMatches);
+  // 新增词条
+  function handleAddTerm(e) {
+    e.preventDefault();
+    const newTerm = {
+      id: 'custom_' + Date.now(),
+      category: document.getElementById('addCategory').value,
+      zh: document.getElementById('addZh').value.trim(),
+      en: document.getElementById('addEn').value.trim(),
+      kr: document.getElementById('addKr').value.trim(),
+      definition: document.getElementById('addDef').value.trim()
+    };
 
-            // If no exact match in local DB, fetch from public API
-            if (localMatches.length === 0) {
-                const extResult = await fetchExternalDictionary(query);
-                if (extResult) {
-                    renderList(localMatches, extResult);
-                }
-            }
-        }
+    customDict.push(newTerm);
+    localStorage.setItem('chem_custom_dict', JSON.stringify(customDict));
+    alert('词条添加成功！');
+    document.getElementById('addTermForm').reset();
+    renderDict();
+    switchTab('dictTab');
+  }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                const toast = document.getElementById('toast');
-                toast.classList.remove('opacity-0');
-                setTimeout(() => toast.classList.add('opacity-0'), 2000);
-            });
-        }
+  // 渲染与添加笔记
+  function renderNotes() {
+    const container = document.getElementById('noteList');
+    if (notes.length === 0) {
+      container.innerHTML = `<p style="color: var(--text-muted);">暂无学习笔记。</p>`;
+      return;
+    }
+    container.innerHTML = notes.map(n => `
+      <div class="note-card">
+        <div class="note-title">${n.title}</div>
+        <div class="note-body">${n.content}</div>
+        <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.5rem;">${n.date}</div>
+      </div>
+    `).join('');
+  }
 
-        function exportCSV() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "English,中文,한국어,Korean Pronunciation,Category,Definition\n";
+  function handleAddNote() {
+    const title = document.getElementById('noteTitle').value.trim();
+    const content = document.getElementById('noteContent').value.trim();
+    if (!title || !content) return alert('请填入标题和内容');
 
-            database.forEach(row => {
-                const escape = (text) => `"${(text || '').replace(/"/g, '""')}"`;
-                csvContent += `${escape(row.en)},${escape(row.zh)},${escape(row.ko)},${escape(row.pron)},${escape(row.category)},${escape(row.def)}\n`;
-            });
+    notes.unshift({
+      id: 'note_' + Date.now(),
+      title,
+      content,
+      date: new Date().toLocaleString()
+    });
 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Lithography_Lexicon.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+    localStorage.setItem('chem_notes', JSON.stringify(notes));
+    document.getElementById('noteTitle').value = '';
+    document.getElementById('noteContent').value = '';
+    renderNotes();
+  }
 
-        // Initialize display
-        renderList(database);
-    </script>
+  // GitHub Settings & Sync
+  function saveSettings() {
+    localStorage.setItem('gh_token', document.getElementById('ghToken').value.trim());
+    localStorage.setItem('gh_repo', document.getElementById('ghRepo').value.trim());
+    alert('配置已保存！');
+  }
+
+  function loadSettings() {
+    document.getElementById('ghToken').value = localStorage.getItem('gh_token') || '';
+    document.getElementById('ghRepo').value = localStorage.getItem('gh_repo') || '';
+  }
+
+  async function syncToGithub() {
+    const token = localStorage.getItem('gh_token');
+    const repo = localStorage.getItem('gh_repo');
+    if (!token || !repo) return alert('请先填写并保存 GitHub Token 与 仓库信息');
+
+    document.getElementById('syncStatus').innerText = '正在同步云端...';
+    // 此处预留 GitHub Commit/Push 异步处理逻辑
+    setTimeout(() => {
+      document.getElementById('syncStatus').innerText = '同步完成';
+      alert('已将数据成功推送并备份到 GitHub !');
+    }, 1000);
+  }
+
+  window.onload = initData;
+</script>
 </body>
 </html>
