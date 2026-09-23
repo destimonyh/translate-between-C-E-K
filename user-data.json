@@ -1,7 +1,7 @@
 {
   "vocab": [
     {
-      "id": "u1790127087213",
+      "id": "u1790127093435",
       "zh": "硫盐",
       "en": "Sulfonium",
       "koRom": "설포늄",
@@ -10,7 +10,19 @@
       "level": "基础",
       "note": "锍阳离子（Sulfonium Cation，如R3S+）：负责“感光解离”作用： 它是 PAG 中对 193nm 或 EUV（13.5nm）光子/二次电子敏感的部分。过程： 吸收光子或高能电子后，锍阳离子发生分解（Cleavage），产生自由基并释放出质子（H+）。",
       "conf": "needs-check",
-      "addedAt": "2026-09-23T01:31:27.213Z"
+      "addedAt": "2026-09-23T01:31:33.435Z"
+    },
+    {
+      "id": "u1790127384004",
+      "zh": "磺酸盐",
+      "en": "Sulfonate",
+      "koRom": "설포네이트",
+      "koMean": "需验证",
+      "domain": "合成",
+      "level": "基础",
+      "note": "磺酸阴离子（Sulfonate Anion，如 R-SO3）：负责“结合成酸”并“控制酸扩散”作用： 它与锍阳离子解离出的质子（H+）结合，形成强磺酸（R-SO3H）。过程： 形成的强酸去催化光刻树脂发生脱保护反应（Deprotection）。而磺酸根（Sulfonate）上挂载的 Bulky（庞大）基团（如全氟基团、脂环族结构），则利用 Steric Hindrance（立体阻碍） 限制酸在 PEB 烘烤过程中的过度扩散，从而提高光刻分辨率并降低 LWR（线边缘粗糙度）。",
+      "conf": "needs-check",
+      "addedAt": "2026-09-23T01:36:24.004Z"
     }
   ],
   "notes": [
