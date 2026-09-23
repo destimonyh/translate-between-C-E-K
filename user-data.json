@@ -1,5 +1,18 @@
 {
-  "vocab": [],
+  "vocab": [
+    {
+      "id": "u1790127087213",
+      "zh": "硫盐",
+      "en": "Sulfonium",
+      "koRom": "설포늄",
+      "koMean": "需验证",
+      "domain": "合成",
+      "level": "基础",
+      "note": "锍阳离子（Sulfonium Cation，如R3S+）：负责“感光解离”作用： 它是 PAG 中对 193nm 或 EUV（13.5nm）光子/二次电子敏感的部分。过程： 吸收光子或高能电子后，锍阳离子发生分解（Cleavage），产生自由基并释放出质子（H+）。",
+      "conf": "needs-check",
+      "addedAt": "2026-09-23T01:31:27.213Z"
+    }
+  ],
   "notes": [
     {
       "id": "n1789971513550",
