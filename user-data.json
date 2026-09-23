@@ -71,6 +71,18 @@
       "note": "色谱仪",
       "conf": "needs-check",
       "addedAt": "2026-09-23T06:30:07.839Z"
+    },
+    {
+      "id": "u1790149498512",
+      "zh": "热解",
+      "en": "pyrolysis",
+      "koRom": "파이롤리시스",
+      "koMean": "열분해",
+      "domain": "合成",
+      "level": "基础",
+      "note": "指在无氧或缺氧高温环境下，有机物发生热化学分解的过程。在光刻胶（Photoresist）领域，热解常用于硬烘烤（Hard Bake）过程中的树脂碳化、固化，或通过热重分析（TGA）评估材料的热稳定性。",
+      "conf": "verified",
+      "addedAt": "2026-09-23T07:44:58.512Z"
     }
   ],
   "notes": [
