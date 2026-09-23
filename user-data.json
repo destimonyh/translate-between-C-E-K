@@ -35,6 +35,18 @@
       "note": "全氟化取代基",
       "conf": "needs-check",
       "addedAt": "2026-09-23T01:41:48.386Z"
+    },
+    {
+      "id": "u1790128055022",
+      "zh": "脂环族",
+      "en": "alicyclic",
+      "koRom": "알리사이클릭",
+      "koMean": "지환족",
+      "domain": "合成",
+      "level": "基础",
+      "note": "在 ArF（193nm）与 EUV 光刻胶中，为了兼顾 193nm/13.5nm 处的透光性 和 强抗等离子体刻蚀能力（Etch Resistance），树脂侧链大量采用了脂环族（Alicyclic）结构",
+      "conf": "verified",
+      "addedAt": "2026-09-23T01:47:35.022Z"
     }
   ],
   "notes": [
