@@ -43,6 +43,55 @@
     return btoa(unescape(encodeURIComponent(str)));
   }
 
+  // 发音图标（内联 SVG，避免 emoji；学术简洁风）
+  var SPEAKER_SVG = '<svg class="spk" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">' +
+    '<path d="M3 6h2.5L8 3v10L5.5 10H3z" fill="currentColor"/>' +
+    '<path d="M10 5.2a3.2 3.2 0 0 1 0 5.6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>' +
+    '</svg>';
+
+  // ---------- 发音（Web Speech API） ----------
+  // 纯前端、零成本、零后端；预设词与用户新增词通用（二者均含 en 字段）。
+  // 支持英式(en-GB)/美式(en-US)，移动端(iOS Safari)同样可用。
+  var synth = window.speechSynthesis || null;
+  var voicesLoaded = [];
+
+  function refreshVoices() {
+    if (!synth) return;
+    var vs = synth.getVoices();
+    if (vs && vs.length) voicesLoaded = vs;
+  }
+  // iOS / 部分 Chrome：语音列表异步加载，加载完成后回调刷新
+  if (synth && 'onvoiceschanged' in synth) {
+    synth.onvoiceschanged = refreshVoices;
+  }
+  // iOS 首次 getVoices() 常返回空，需在用户手势内首次取一次（点击发音即触发）
+  function ensureVoices() {
+    if (!synth) return;
+    if (!voicesLoaded.length) refreshVoices();
+  }
+  // 按 lang 选取最匹配语音：精确 -> 同语种前缀(en-)兜底
+  function pickVoice(lang) {
+    if (!voicesLoaded.length) refreshVoices();
+    if (!voicesLoaded.length) return null;
+    var exact = voicesLoaded.filter(function (v) { return v.lang === lang; });
+    if (exact.length) return exact[0];
+    var base = lang.split('-')[0];
+    var near = voicesLoaded.filter(function (v) { return v.lang && v.lang.split('-')[0] === base; });
+    return near.length ? near[0] : null;
+  }
+  // 朗读单词；word 来自卡片的 en 字段
+  function speak(word, lang) {
+    if (!synth || !word) return;        // 浏览器不支持或单词为空则静默
+    ensureVoices();
+    // 不调用 cancel()：iOS Safari 在 cancel 后紧接 speak 可能吞掉首次发音；
+    // 快速连点仅会顺序朗读，属可接受行为。
+    var u = new SpeechSynthesisUtterance(word);
+    u.lang = lang;
+    var v = pickVoice(lang);
+    if (v) u.voice = v;                // 无对应语音时仅靠 lang 让系统自选（可能回退）
+    synth.speak(u);
+  }
+
   // ---------- 设置 ----------
   function loadSettings() {
     try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
@@ -244,7 +293,11 @@
     el.className = 'card' + (starred ? ' starred' : '');
     el.innerHTML =
       '<div class="head"><span class="zh">' + esc(v.zh) + '</span>' +
-      '<span class="en">' + esc(v.en) + '</span></div>' +
+      '<span class="en">' + esc(v.en) + '</span>' +
+      '<span class="speak-btns">' +
+        '<button class="speak-btn" type="button" data-word="' + esc(v.en) + '" data-lang="en-GB" title="英式发音 (UK)" aria-label="英式发音">' + SPEAKER_SVG + 'UK</button>' +
+        '<button class="speak-btn" type="button" data-word="' + esc(v.en) + '" data-lang="en-US" title="美式发音 (US)" aria-label="美式发音">' + SPEAKER_SVG + 'US</button>' +
+      '</span></div>' +
       ko +
       '<div class="note">' + esc(v.note) + '</div>' +
       '<div class="meta">' + tags + edt + del + star + '</div>';
@@ -253,6 +306,12 @@
 
   // 事件委托：星标 / 编辑 / 删除（词汇库与星标两个列表共用）
   function onVocabClick(e) {
+    // 0) 发音（英式/美式）—— 任何卡片（预设或用户新增）都可点
+    var speakBtn = e.target.closest('.speak-btn');
+    if (speakBtn) {
+      speak(speakBtn.getAttribute('data-word'), speakBtn.getAttribute('data-lang'));
+      return;
+    }
     // 1) 星标切换（任何卡片都可点）
     var starBtn = e.target.closest('.star-btn');
     if (starBtn) { toggleStar(starBtn.getAttribute('data-id')); return; }

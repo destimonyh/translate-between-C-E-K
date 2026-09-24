@@ -111,6 +111,17 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 }
 .edit-btn:hover { background: #eef2f8; }
 
+/* 发音按钮：英文词旁的小喇叭（英式 UK / 美式 US） */
+.speak-btns { display: inline-flex; align-items: center; gap: 4px; margin-left: 4px; }
+.speak-btn {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 11px; line-height: 1; color: var(--accent);
+  background: var(--accent-soft); border: 1px solid #d4e0ec;
+  border-radius: 10px; padding: 1px 7px; cursor: pointer;
+}
+.speak-btn:hover { background: #dde8f3; }
+.speak-btn .spk { display: block; }
+
 /* 星标按钮（卡片右下角，GitHub star 式切换） */
 .star-btn {
   margin-left: 8px; font-size: 18px; line-height: 1; background: none;
