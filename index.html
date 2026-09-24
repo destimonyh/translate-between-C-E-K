@@ -13,6 +13,7 @@
       <p class="subtitle">Chemistry · Photoresist · Packaging · Polymerization · Scale-up — 中 / 英 / 韩 对照</p>
       <nav class="tabs" id="tabs">
         <button class="tab active" data-tab="vocab">词汇库</button>
+        <button class="tab" data-tab="stars">星标词汇</button>
         <button class="tab" data-tab="add">自助新增</button>
         <button class="tab" data-tab="notes">学习笔记</button>
         <button class="tab" data-tab="settings">设置</button>
@@ -40,10 +41,19 @@
           <option value="基础">基础</option>
           <option value="核心">核心</option>
           <option value="最新">最新</option>
+          <option value="__user__">自助新增</option>
         </select>
         <span id="vocabCount" class="count"></span>
       </div>
       <div id="vocabList" class="vocab-list"></div>
+    </section>
+
+    <!-- ============ 星标词汇 ============ -->
+    <section id="stars" class="panel">
+      <div class="controls">
+        <span id="starsCount" class="count"></span>
+      </div>
+      <div id="starsList" class="vocab-list"></div>
     </section>
 
     <!-- ============ 自助新增 ============ -->

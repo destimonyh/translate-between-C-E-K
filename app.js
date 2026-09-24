@@ -10,8 +10,9 @@
   var USERDATA_KEY = 'chem_userdata_cache';     // 用户数据的本地缓存（离线可读）
   var PRESET = (window.CHEM_VOCAB || []);        // 预设词汇（来自 data.js）
 
-  // 内存中的用户数据；结构: { vocab: [], notes: [] }
-  var userData = { vocab: [], notes: [] };
+  // 内存中的用户数据；结构: { vocab: [], notes: [], stars: [] }
+  // stars 存放被收藏词条的 id（预设词 id 形如 p0/p1…，用户词 id 形如 u…，均稳定）
+  var userData = { vocab: [], notes: [], stars: [] };
 
   // 编辑态：非空表示正在修改已有条目（否则为新增模式）
   var editingVocabId = null;
@@ -131,13 +132,28 @@
 
   function getAllVocab() {
     // 预设 + 用户；用户词条带 source/可删标记
-    var preset = PRESET.map(function (v) {
-      return Object.assign({}, v, { source: 'preset' });
+    // 预置词无 id，这里按数组下标补一个稳定 id（p0/p1…），用于星标标记
+    var preset = PRESET.map(function (v, i) {
+      return Object.assign({}, v, { id: v.id || ('p' + i), source: 'preset' });
     });
     var user = userData.vocab.map(function (v) {
       return Object.assign({}, v, { source: 'user' });
     });
     return preset.concat(user);
+  }
+
+  // 是否已收藏
+  function isStarred(id) {
+    return userData.stars.indexOf(id) !== -1;
+  }
+
+  // 切换收藏状态（GitHub star 式：点一下收藏，再点取消），并写回仓库同步
+  function toggleStar(id) {
+    if (!id) return;
+    var i = userData.stars.indexOf(id);
+    if (i === -1) userData.stars.push(id);
+    else userData.stars.splice(i, 1);
+    persistAndRender('toggle star ' + id, null, function () { renderVocab(); renderStars(); });
   }
 
   function renderVocab() {
@@ -146,7 +162,11 @@
     var fl = $('filterLevel').value;
     var list = getAllVocab().filter(function (v) {
       if (fd && v.domain !== fd) return false;
-      if (fl && v.level !== fl) return false;
+      // 层级筛选：“自助新增”按来源(用户添加)过滤，其余按 level 字段过滤
+      if (fl) {
+        if (fl === '__user__') { if (v.source !== 'user') return false; }
+        else if (v.level !== fl) return false;
+      }
       if (q) {
         var hay = (v.zh + ' ' + v.en + ' ' + v.koRom + ' ' + v.koMean + ' ' + (v.note || '')).toLowerCase();
         if (hay.indexOf(q) === -1) return false;
@@ -185,7 +205,21 @@
   }
 
   function domLabel(d) {
-    return { '合成': '化学合成', '光刻胶': '光刻胶', '封装': '封装', '聚合': '聚合', '量产扩大': '量产扩大' }[d] || d;
+    return { '合成': '化学合成', '光刻胶': '光刻胶', '封装': '封装', '聚合': '聚合', '量产扩大': '量产扩大', '其他': '其他' }[d] || d;
+  }
+
+  // 渲染“星标词汇”标签页：实时汇总所有已收藏词条
+  function renderStars() {
+    var container = $('starsList');
+    if (!container) return;
+    var starred = getAllVocab().filter(function (v) { return isStarred(v.id); });
+    container.innerHTML = '';
+    $('starsCount').textContent = '共 ' + starred.length + ' 条';
+    if (!starred.length) {
+      container.innerHTML = '<p class="hint">暂无星标词汇。在“词汇库”点击卡片右下角的 ☆ 即可收藏，便于重点学习。</p>';
+      return;
+    }
+    starred.forEach(function (v) { container.appendChild(cardEl(v)); });
   }
 
   function cardEl(v) {
@@ -203,17 +237,26 @@
       ? '<button class="del-btn" data-id="' + esc(v.id) + '">删除</button>' : '';
     var edt = v.source === 'user'
       ? '<button class="edit-btn" data-id="' + esc(v.id) + '">编辑</button>' : '';
+    // 星标按钮：右下角，★=已收藏 / ☆=未收藏
+    var starred = isStarred(v.id);
+    var star = '<button class="star-btn' + (starred ? ' on' : '') + '" data-id="' + esc(v.id) +
+      '" title="收藏 / 取消收藏">' + (starred ? '★' : '☆') + '</button>';
+    el.className = 'card' + (starred ? ' starred' : '');
     el.innerHTML =
       '<div class="head"><span class="zh">' + esc(v.zh) + '</span>' +
       '<span class="en">' + esc(v.en) + '</span></div>' +
       ko +
       '<div class="note">' + esc(v.note) + '</div>' +
-      '<div class="meta">' + tags + edt + del + '</div>';
+      '<div class="meta">' + tags + edt + del + star + '</div>';
     return el;
   }
 
-  // 事件委托：编辑 / 删除用户词条
-  $('vocabList').addEventListener('click', function (e) {
+  // 事件委托：星标 / 编辑 / 删除（词汇库与星标两个列表共用）
+  function onVocabClick(e) {
+    // 1) 星标切换（任何卡片都可点）
+    var starBtn = e.target.closest('.star-btn');
+    if (starBtn) { toggleStar(starBtn.getAttribute('data-id')); return; }
+    // 2) 编辑（仅用户词条）
     var editBtn = e.target.closest('.edit-btn');
     if (editBtn) {
       var id = editBtn.getAttribute('data-id');
@@ -234,13 +277,16 @@
       setStatus('addStatus', '正在修改词条，改完点“保存修改”。', '');
       return;
     }
+    // 3) 删除（仅用户词条）
     var delBtn = e.target.closest('.del-btn');
     if (!delBtn) return;
     var did = delBtn.getAttribute('data-id');
     if (!confirm('确认删除该词条？')) return;
     userData.vocab = userData.vocab.filter(function (x) { return String(x.id) !== String(did); });
     persistAndRender('删除词条', 'vocabList');
-  });
+  }
+  $('vocabList').addEventListener('click', onVocabClick);
+  $('starsList').addEventListener('click', onVocabClick);
 
   // 重置新增表单到“新增模式”
   function resetAddForm() {
@@ -405,14 +451,14 @@
       .then(function () {
         localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
         setStatus(statusId, '已保存到仓库 ✓', 'ok');
-        renderVocab(); renderNotes();
+        renderVocab(); renderNotes(); renderStars();
         if (after) after();
       })
       .catch(function (err) {
         // 写库失败时仍保留本地缓存，避免丢失
         localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
         setStatus(statusId, '保存失败：' + err.message + '（已存本地）', 'err');
-        renderVocab(); renderNotes();
+        renderVocab(); renderNotes(); renderStars();
       });
   }
 
@@ -472,19 +518,29 @@
   // ---------- 初始化 ----------
   function init() {
     applySettingsToForm();
-    // 先显示预设，保证离线可用
+    // 先用本机缓存（离线也能看到上次同步的收藏/词汇/笔记），保证离线可用
+    try {
+      var cached = JSON.parse(localStorage.getItem(USERDATA_KEY));
+      if (cached) {
+        userData.vocab = cached.vocab || [];
+        userData.notes = cached.notes || [];
+        userData.stars = cached.stars || [];
+      }
+    } catch (e) { /* 缓存损坏则忽略 */ }
     renderVocab();
     renderNotes();
-    // 再尝试从仓库拉取用户数据
+    renderStars();
+    // 再尝试从仓库拉取用户数据（在线时以仓库为准，覆盖缓存）
     var s = loadSettings();
     if (s.owner && s.repo) {
       fetchUserData().then(function (data) {
         if (data) {
           userData.vocab = data.vocab || [];
           userData.notes = data.notes || [];
+          userData.stars = data.stars || [];
           localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
         }
-        renderVocab(); renderNotes();
+        renderVocab(); renderNotes(); renderStars();
       }).catch(function () { /* 离线/未配置：仅用预设与本机缓存 */ });
     }
   }

@@ -111,6 +111,17 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 }
 .edit-btn:hover { background: #eef2f8; }
 
+/* 星标按钮（卡片右下角，GitHub star 式切换） */
+.star-btn {
+  margin-left: 8px; font-size: 18px; line-height: 1; background: none;
+  border: none; cursor: pointer; color: #c9c9c9; padding: 0 2px;
+  transition: color .15s, transform .15s;
+}
+.star-btn:hover { color: #f0a500; transform: scale(1.15); }
+.star-btn.on { color: #f0a500; }
+/* 已收藏卡片左侧高亮条 */
+.card.starred { border-left: 3px solid #f0a500; }
+
 /* 笔记的操作按钮（编辑 / 删除） */
 .note-actions { display: flex; gap: 8px; margin-top: 8px; }
 .note-actions button {
