@@ -199,6 +199,19 @@
       "conf": "verified",
       "images": [],
       "addedAt": "2026-09-28T03:03:08.805Z"
+    },
+    {
+      "id": "u1790565797063",
+      "zh": "大规模集成",
+      "en": "Large-Scale Integration (LSI)",
+      "koRom": "라지 스케일 인테그레이션",
+      "koMean": "대규모 집적",
+      "domain": "其他",
+      "level": "基础",
+      "note": "指在一块半导体芯片（Chip）上集成 1,000 至 100,000 个电子元件（如晶体管）的半导体制造技术与电路规模。在微电子与光刻胶（Photoresist）领域，LSI 的发展推动了由 i-line（365 nm）向 KrF（248 nm）等更高分辨率光刻工艺的演进。",
+      "conf": "verified",
+      "images": [],
+      "addedAt": "2026-09-28T03:23:17.063Z"
     }
   ],
   "notes": [
@@ -325,5 +338,5 @@
     "p70"
   ],
   "overrides": {},
-  "savedAt": "2026-09-28T02:57:00.926Z"
+  "savedAt": "2026-09-28T03:03:13.018Z"
 }
