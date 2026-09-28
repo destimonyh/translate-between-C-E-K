@@ -143,6 +143,18 @@
       "note": "出口 / 出样口 / 排气口 / 排液口 / 出料口",
       "conf": "verified",
       "addedAt": "2026-09-24T02:29:56.018Z"
+    },
+    {
+      "id": "u1790561830526",
+      "zh": "苯环",
+      "en": "Benzene Ring",
+      "koRom": "벤젠 링",
+      "koMean": "벤젠고리",
+      "domain": "合成",
+      "level": "基础",
+      "note": "苯环",
+      "conf": "verified",
+      "addedAt": "2026-09-28T02:17:10.526Z"
     }
   ],
   "notes": [
