@@ -157,6 +157,19 @@
       "addedAt": "2026-09-28T02:17:10.526Z",
       "images": [],
       "updatedAt": "2026-09-28T02:38:42.330Z"
+    },
+    {
+      "id": "u1790563912835",
+      "zh": "紫光展銳",
+      "en": "UNISOC",
+      "koRom": "需验证",
+      "koMean": "需验证",
+      "domain": "其他",
+      "level": "最新",
+      "note": "紫光展銳科技股份有限公司",
+      "conf": "needs-check",
+      "images": [],
+      "addedAt": "2026-09-28T02:51:52.835Z"
     }
   ],
   "notes": [
@@ -282,5 +295,6 @@
     "p377",
     "p70"
   ],
-  "overrides": {}
+  "overrides": {},
+  "savedAt": ""
 }
