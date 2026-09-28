@@ -10,13 +10,25 @@
   var USERDATA_KEY = 'chem_userdata_cache';     // 用户数据的本地缓存（离线可读）
   var PRESET = (window.CHEM_VOCAB || []);        // 预设词汇（来自 data.js）
 
-  // 内存中的用户数据；结构: { vocab: [], notes: [], stars: [] }
-  // stars 存放被收藏词条的 id（预设词 id 形如 p0/p1…，用户词 id 形如 u…，均稳定）
-  var userData = { vocab: [], notes: [], stars: [] };
+  // 内存中的用户数据；结构: { vocab: [], notes: [], stars: [], overrides: {} }
+  // stars     —— 被收藏词条的 id；
+  // overrides—— 对「预设词条（含 118 化学元素）」的字段覆盖，键为 'ov:' + 词条 key。
+  //              预设词库本身只读（data.js 由生成器产出），编辑内容单独存这里，
+  //              避免把上千条预设词整体搬进用户数据文件。
+  var userData = { vocab: [], notes: [], stars: [], overrides: {} };
 
-  // 编辑态：非空表示正在修改已有条目（否则为新增模式）
+  // 编辑态：
+  //   editingVocabId 为 null            -> 新增模式
+  //   以 'ov:' 开头                     -> 修改预设词条（写入 userData.overrides）
+  //   为 'u…' 等用户词条 id             -> 修改用户词条（写入 userData.vocab）
   var editingVocabId = null;
   var editingNoteId = null;
+
+  // 当前表单会话中「待提交的图片」（data URL 数组）
+  var pendingVImages = [];   // 自助新增 / 编辑词汇
+  var pendingNImages = [];   // 学习笔记
+  var MAX_IMAGES = 8;        // 单条目最多图片数
+  var MAX_IMG_BYTES = 500 * 1024;   // 单图压缩目标上限（GitHub API 单文件内容 1MB）
 
   // 切换页签（编辑时用于跳转回表单）
   function showTab(tab) {
@@ -36,6 +48,16 @@
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // 设置按钮的「可见文案」。
+  // 关键：<button> 的显示文字来自子元素文本，赋值 .value 只在表单提交时传递值，
+  // 界面上完全不变（<input type=submit> 才是 value 即文案）。因此必须写 textContent，
+  // 否则会出现「提示语让你点保存修改，按钮上却还写着保存到仓库」的问题。
+  function setBtnLabel(el, txt) {
+    if (!el) return;
+    el.textContent = txt;
+    el.value = txt;              // 同时同步表单提交值，保持语义一致
   }
 
   // UTF-8 字符串 -> Base64（GitHub API 要求 base64 内容）
@@ -116,7 +138,14 @@
     if (!s.owner || !s.repo) return Promise.resolve(null);
     var rawUrl = 'https://raw.githubusercontent.com/' + s.owner + '/' + s.repo + '/' +
       (s.branch || 'main') + '/' + (s.path || 'user-data.json');
-    return fetch(rawUrl)
+    // fetch 可能抛同步异常（环境不支持 / 网络中断），统一兜底，避免阻断页面初始化
+    var p;
+    try {
+      p = fetch(rawUrl);
+    } catch (e) {
+      p = Promise.reject(e);
+    }
+    return p
       .then(function (r) {
         if (!r.ok) {
           if (r.status === 404) return null;             // 文件不存在，视为空
@@ -137,7 +166,15 @@
         if (r.status === 404) return { sha: null, data: null };
         if (!r.ok) throw new Error('API 读取失败 HTTP ' + r.status);
         return r.json().then(function (j) {
-          var txt = decodeURIComponent(escape(atob(j.content.replace(/\s/g, ''))));
+          // 严格按 UTF-8 字节流解码：先把 base64 还原为字节，再整体解码。
+          // 注意不能用 decodeURIComponent(escape(atob(...)))——那会把多字节序列
+          // 逐个还原成错误码位的单个字符（中文/韩文会乱码），仅英文可用。
+          var bin = atob(j.content.replace(/\s/g, ''));
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i) & 0xff;
+          var txt = (typeof TextDecoder !== 'undefined')
+            ? new TextDecoder('utf-8').decode(bytes)
+            : decodeURIComponent(escape(bytes));   // 旧环境兜底
           return { sha: j.sha, data: JSON.parse(txt) };
         });
       });
@@ -149,14 +186,24 @@
     if (!s.owner || !s.repo || !s.pat) {
       return Promise.reject(new Error('请先在“设置”中填写 owner / repo / PAT'));
     }
-    var content = utf8ToBase64(JSON.stringify(userData, null, 2));
+    var raw = JSON.stringify(userData, null, 2);
+    // GitHub 内容 API 单文件上限 1MB（base64 后约为原始字符的 1.33 倍），提前拦截
+    if (raw.length > 620 * 1024) {
+      return Promise.reject(new Error(
+        '数据体积 ' + Math.round(raw.length / 1024) + 'KB，超出仓库写入上限；请精简配图数量或改用更小尺寸的截图。'));
+    }
+    var content = utf8ToBase64(raw);
     var path = s.path || 'user-data.json';
     var url = 'https://api.github.com/repos/' + s.owner + '/' + s.repo +
       '/contents/' + encodeURIComponent(path);
     // 第一步：获取当前 sha
-    return fetch(url + '?ref=' + encodeURIComponent(s.branch || 'main'), {
-      headers: { 'Authorization': 'Bearer ' + s.pat, 'Accept': 'application/vnd.github+json' }
-    }).then(function (r) {
+    var p1;
+    try {
+      p1 = fetch(url + '?ref=' + encodeURIComponent(s.branch || 'main'), {
+        headers: { 'Authorization': 'Bearer ' + s.pat, 'Accept': 'application/vnd.github+json' }
+      });
+    } catch (e) { p1 = Promise.reject(e); }
+    return p1.then(function (r) {
       var sha = null;
       if (r.ok) return r.json().then(function (j) { return j.sha; });
       if (r.status !== 404) throw new Error('获取 sha 失败 HTTP ' + r.status);
@@ -179,16 +226,50 @@
   // ---------- 词汇库渲染 ----------
   var DOMAIN_ORDER = ['合成', '光刻胶', '封装', '聚合', '量产扩大', '化学元素'];
 
+  // 预设词条的覆盖键：'ov:' + key（key 由 generate_data.js 产出，全库唯一）
+  function ovKey(v, i) {
+    return 'ov:' + (v.key || ('p' + i));
+  }
+
+  // 韩语两项是否都已填写（决定 conf 标记）
+  function koDone(v) {
+    return !!(v.koRom && v.koRom !== '需验证' && v.koMean && v.koMean !== '需验证');
+  }
+
   function getAllVocab() {
+    var overrides = userData.overrides || {};
     // 预设 + 用户；用户词条带 source/可删标记
-    // 预置词无 id，这里按数组下标补一个稳定 id（p0/p1…），用于星标标记
+    // 预置词无 id 时按数组下标补稳定 id（p0/p1…），用于星标标记
     var preset = PRESET.map(function (v, i) {
-      return Object.assign({}, v, { id: v.id || ('p' + i), source: 'preset' });
+      var o = Object.assign({}, v, { id: v.id || ('p' + i), source: 'preset' });
+      var k = ovKey(v, i);
+      var ov = overrides[k];
+      o._ovKey = k;   // 所有预设词条都带覆盖键（编辑时据此写入 overrides）
+      if (ov) {
+        // 覆盖合并：只取用户实际填写过的字段（空串表示未填，回落到预设原值）
+        ['koRom', 'koMean', 'note', 'level', 'domain'].forEach(function (f) {
+          if (typeof ov[f] === 'string' && ov[f] !== '') o[f] = ov[f];
+        });
+        if (Array.isArray(ov.images)) o.images = ov.images.slice();
+        o._ovDone = true;
+      }
+      o.conf = koDone(o) ? 'verified' : 'needs-check';
+      return o;
     });
     var user = userData.vocab.map(function (v) {
-      return Object.assign({}, v, { source: 'user' });
+      var o = Object.assign({}, v, { source: 'user' });
+      o._ovKey = '';
+      o.conf = koDone(o) ? 'verified' : 'needs-check';
+      return o;
     });
     return preset.concat(user);
+  }
+
+  // 按渲染后的 id 取词条（用于回填编辑表单）
+  function findRendered(id) {
+    var m = null;
+    getAllVocab().forEach(function (v) { if (!m && String(v.id) === String(id)) m = v; });
+    return m;
   }
 
   // 是否已收藏
@@ -273,24 +354,36 @@
 
   function cardEl(v) {
     var el = document.createElement('div');
-    el.className = 'card';
+    var starred = isStarred(v.id);
+    el.className = 'card' + (starred ? ' starred' : '') + (v._ovDone ? ' edited' : '');
     var ko = (v.koRom && v.koRom !== '需验证') || (v.koMean && v.koMean !== '需验证')
       ? '<div class="ko"><span class="koRom">' + esc(v.koRom) + '</span> / <span class="koMean">' + esc(v.koMean) + '</span></div>'
-      : '<div class="ko"><span class="koMean">韩语：需验证</span></div>';
+      : '<div class="ko"><span class="koMean">韩语：需验证（点“编辑”可补填）</span></div>';
     var tags =
       '<span class="tag domain">' + esc(domLabel(v.domain)) + '</span>' +
       '<span class="tag">' + esc(v.level) + '</span>' +
       (v.conf === 'needs-check' ? '<span class="tag warn">需验证</span>' : '') +
+      (v._ovDone ? '<span class="tag edited-tag">已编辑</span>' : '') +
       (v.source === 'user' ? '<span class="tag user">我添加</span>' : '');
     var del = v.source === 'user'
       ? '<button class="del-btn" data-id="' + esc(v.id) + '">删除</button>' : '';
-    var edt = v.source === 'user'
-      ? '<button class="edit-btn" data-id="' + esc(v.id) + '">编辑</button>' : '';
+    // 全部词条（预设 / 化学元素 / 用户新增）均可编辑：预设类走 overrides 覆盖模式
+    var edt = '<button class="edit-btn" data-id="' + esc(v.id) + '" data-key="' + esc(v._ovKey || '') + '">编辑</button>';
+    // 卡片配图：用户新增词、已被覆盖编辑的词、化学元素可移除配图
+    var canDropImg = v.source === 'user' || !!v._ovKey;
+    var imgs = (Array.isArray(v.images) && v.images.length)
+      ? '<div class="card-imgs">' + v.images.map(function (src, idx) {
+          return '<span class="thumb"><img src="' + src + '" alt="配图" />' +
+            (canDropImg
+              ? '<button type="button" class="img-del" data-kind="vocab" data-idx="' + idx +
+                '" data-id="' + esc(v.id) + '" data-key="' + esc(v._ovKey || '') + '" title="移除该图">×</button>'
+              : '') +
+            '</span>';
+        }).join('') + '</div>'
+      : '';
     // 星标按钮：右下角，★=已收藏 / ☆=未收藏
-    var starred = isStarred(v.id);
     var star = '<button class="star-btn' + (starred ? ' on' : '') + '" data-id="' + esc(v.id) +
       '" title="收藏 / 取消收藏">' + (starred ? '★' : '☆') + '</button>';
-    el.className = 'card' + (starred ? ' starred' : '');
     el.innerHTML =
       '<div class="head"><span class="zh">' + esc(v.zh) + '</span>' +
       '<span class="en">' + esc(v.en) + '</span>' +
@@ -300,11 +393,12 @@
       '</span></div>' +
       ko +
       '<div class="note">' + esc(v.note) + '</div>' +
+      imgs +
       '<div class="meta">' + tags + edt + del + star + '</div>';
     return el;
   }
 
-  // 事件委托：星标 / 编辑 / 删除（词汇库与星标两个列表共用）
+  // 事件委托：发音 / 星标 / 编辑 / 删除 / 移除配图（词汇库与星标两个列表共用）
   function onVocabClick(e) {
     // 0) 发音（英式/美式）—— 任何卡片（预设或用户新增）都可点
     var speakBtn = e.target.closest('.speak-btn');
@@ -312,16 +406,23 @@
       speak(speakBtn.getAttribute('data-word'), speakBtn.getAttribute('data-lang'));
       return;
     }
+    // 0.5) 移除卡片上的某张配图
+    var imgDel = e.target.closest('.img-del');
+    if (imgDel && imgDel.getAttribute('data-kind') === 'vocab') {
+      removeVocabImage(imgDel.getAttribute('data-key'), imgDel.getAttribute('data-id'), parseInt(imgDel.getAttribute('data-idx'), 10));
+      return;
+    }
     // 1) 星标切换（任何卡片都可点）
     var starBtn = e.target.closest('.star-btn');
     if (starBtn) { toggleStar(starBtn.getAttribute('data-id')); return; }
-    // 2) 编辑（仅用户词条）
+    // 2) 编辑（全部词条：预设/元素走 overrides，用户词条走 userData.vocab）
     var editBtn = e.target.closest('.edit-btn');
     if (editBtn) {
       var id = editBtn.getAttribute('data-id');
-      var entry = userData.vocab.filter(function (x) { return String(x.id) === String(id); })[0];
+      var entry = findRendered(id);
       if (!entry) return;
-      // 把现有条目回填到新增表单，并切换为“修改模式”
+      var isPreset = !!editBtn.getAttribute('data-key');
+      // 回填表单
       $('a_zh').value = entry.zh || '';
       $('a_en').value = entry.en || '';
       $('a_koRom').value = (entry.koRom && entry.koRom !== '需验证') ? entry.koRom : '';
@@ -329,9 +430,23 @@
       $('a_domain').value = entry.domain || '合成';
       $('a_level').value = entry.level || '核心';
       $('a_note').value = entry.note || '';
-      editingVocabId = entry.id;
-      $('addSubmit').value = '保存修改';
+      // 预设词条：中文/英文为库内既有内容，锁定以免覆盖键与展示不一致
+      $('a_zh').readOnly = isPreset;
+      $('a_en').readOnly = isPreset;
+      // 锁定字段同时去掉必填校验：预设词的中文/英文本来就已有值，
+      // 若保留 required，部分浏览器会在提交时弹出“请填写此字段”并静默阻止保存。
+      $('a_zh').required = !isPreset;
+      $('a_en').required = !isPreset;
+      editingVocabId = isPreset ? editBtn.getAttribute('data-key') : entry.id;
+      setBtnLabel($('addSubmit'), '保存修改');
+      $('addSubmit').classList.add('editing');   // 高亮，避免与「新增」态混淆
       $('addCancel').style.display = '';
+      $('addModeHint').style.display = '';
+      $('addModeHint').textContent = isPreset
+        ? '正在修改预设词条（中文 / 英文已锁定，可补填或修正韩语、解析、方向、层级与配图）。'
+        : '正在修改词条，改完点“保存修改”。';
+      pendingVImages = Array.isArray(entry.images) ? entry.images.slice() : [];
+      drawVImages();
       showTab('add');
       setStatus('addStatus', '正在修改词条，改完点“保存修改”。', '');
       return;
@@ -344,6 +459,26 @@
     userData.vocab = userData.vocab.filter(function (x) { return String(x.id) !== String(did); });
     persistAndRender('删除词条', 'vocabList');
   }
+
+  // 移除某词条上的一张图（支持覆盖模式与用户词条两种存储）
+  function removeVocabImage(ovKeyStr, id, idx) {
+    if (idx < 0) return;
+    if (typeof ovKeyStr === 'string' && ovKeyStr) {
+      var ov = userData.overrides[ovKeyStr];
+      if (ov && Array.isArray(ov.images)) {
+        ov.images.splice(idx, 1);
+        if (!ov.images.length) delete ov.images;
+        ov.updatedAt = new Date().toISOString();
+      }
+    } else {
+      var rec = userData.vocab.filter(function (x) { return String(x.id) === String(id); })[0];
+      if (rec && Array.isArray(rec.images)) {
+        rec.images.splice(idx, 1);
+        rec.updatedAt = new Date().toISOString();
+      }
+    }
+    persistAndRender('移除配图', null, function () { renderVocab(); renderStars(); });
+  }
   $('vocabList').addEventListener('click', onVocabClick);
   $('starsList').addEventListener('click', onVocabClick);
 
@@ -352,9 +487,179 @@
     $('addForm').reset();
     $('a_level').value = '核心';
     editingVocabId = null;
-    $('addSubmit').value = '保存到仓库';
+    setBtnLabel($('addSubmit'), '保存到仓库');
+    $('addSubmit').classList.remove('editing');
     $('addCancel').style.display = 'none';
+    $('a_zh').readOnly = false;
+    $('a_en').readOnly = false;
+    $('a_zh').required = true;
+    $('a_en').required = true;
+    $('addModeHint').style.display = 'none';
+    $('addModeHint').textContent = '';
+    pendingVImages = [];
+    drawVImages();
   }
+
+  // ================= 图片上传（本地选择 + 剪贴板粘贴） =================
+  // 图片以 data URL（base64）随 user-data.json 一起写入仓库，因此必须压缩：
+  //   · 单图目标 <= 500KB（GitHub API 单文件内容上限 1MB）
+  //   · 单条目最多 8 张
+  // 若超出配额，仅跳过 localStorage 缓存，不阻断保存。
+
+  // data URL 近似字节数（base64 每 4 字符 ≈ 3 字节）
+  function approxBytes(dataUrl) { return Math.round(dataUrl.length * 0.75); }
+
+  // 图片压缩：等比缩到最长边 1280，JPEG 质量自适应下降
+  function compressImage(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file || !/^image\//.test(file.type)) { reject(new Error('不是图片文件')); return; }
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error('文件读取失败')); };
+      reader.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error('图片解析失败')); };
+        img.onload = function () {
+          var maxSide = 1280;
+          var w = img.naturalWidth || img.width;
+          var h = img.naturalHeight || img.height;
+          if (w > maxSide || h > maxSide) {
+            var r = Math.min(maxSide / w, maxSide / h);
+            w = Math.round(w * r); h = Math.round(h * r);
+          }
+          var cv = document.createElement('canvas');
+          cv.width = w; cv.height = h;
+          var ctx = cv.getContext('2d');
+          // JPEG 无透明通道：先铺白底，避免截图透明区变黑
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          var q = 0.75, url = cv.toDataURL('image/jpeg', q);
+          var guard = 0;
+          while (approxBytes(url) > MAX_IMG_BYTES && q > 0.35 && guard++ < 6) {
+            q -= 0.12; url = cv.toDataURL('image/jpeg', q);
+          }
+          resolve(url);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // 把若干文件追加进当前待提交图片队列
+  function addPendingImages(files, kind) {
+    var list = kind === 'note' ? pendingNImages : pendingVImages;
+    var pending = Array.prototype.slice.call(files || []);
+    if (!pending.length) return Promise.resolve(0);
+    if (list.length >= MAX_IMAGES) {
+      setStatus(kind === 'note' ? 'noteStatus' : 'addStatus',
+        '最多 ' + MAX_IMAGES + ' 张，请先移除一些再添加。', 'err');
+      return Promise.resolve(0);
+    }
+    var added = 0;
+    return Promise.all(pending.map(function (f) {
+      return compressImage(f).then(function (url) {
+        if (list.length >= MAX_IMAGES) return;
+        // 同一张图重复粘贴去重
+        if (list.indexOf(url) !== -1) return;
+        list.push(url);
+        added++;
+      }).catch(function (err) {
+        setStatus(kind === 'note' ? 'noteStatus' : 'addStatus', '图片添加失败：' + err.message, 'err');
+      });
+    })).then(function () {
+      if (kind === 'note') drawNImages(); else drawVImages();
+      var kb = Math.round(list.reduce(function (s, u) { return s + approxBytes(u); }, 0) / 1024);
+      setStatus(kind === 'note' ? 'noteStatus' : 'addStatus',
+        '已添加 ' + list.length + ' 张配图（约 ' + kb + ' KB）。保存后会写入仓库。', 'ok');
+      return added;
+    });
+  }
+
+  // 预览：词汇表单
+  function drawVImages() {
+    var box = $('a_imgs');
+    if (!box) return;
+    box.innerHTML = '';
+    pendingVImages.forEach(function (src, idx) {
+      var t = document.createElement('span');
+      t.className = 'thumb';
+      t.innerHTML = '<img src="' + src + '" alt="待保存配图" />' +
+        '<button type="button" class="img-del" data-kind="v" data-idx="' + idx + '" title="移除">×</button>';
+      box.appendChild(t);
+    });
+  }
+  // 预览：笔记表单
+  function drawNImages() {
+    var box = $('n_imgs');
+    if (!box) return;
+    box.innerHTML = '';
+    pendingNImages.forEach(function (src, idx) {
+      var t = document.createElement('span');
+      t.className = 'thumb';
+      t.innerHTML = '<img src="' + src + '" alt="待保存配图" />' +
+        '<button type="button" class="img-del" data-kind="n" data-idx="' + idx + '" title="移除">×</button>';
+      box.appendChild(t);
+    });
+  }
+
+  // 当前处于哪个录入面板（决定粘贴的图片归属）
+  function currentImageKind() {
+    var addActive = $('add').classList.contains('active');
+    var notesActive = $('notes').classList.contains('active');
+    if (addActive) return 'vocab';
+    if (notesActive) return 'note';
+    return null;
+  }
+
+  // 表单内预览区的删除按钮（事件委托）
+  $('a_imgs').addEventListener('click', function (e) {
+    var b = e.target.closest('.img-del');
+    if (!b) return;
+    pendingVImages.splice(parseInt(b.getAttribute('data-idx'), 10), 1);
+    drawVImages();
+  });
+  $('n_imgs').addEventListener('click', function (e) {
+    var b = e.target.closest('.img-del');
+    if (!b) return;
+    pendingNImages.splice(parseInt(b.getAttribute('data-idx'), 10), 1);
+    drawNImages();
+  });
+
+  // 本地文件选择
+  $('a_pick').addEventListener('click', function () { $('a_file').click(); });
+  $('n_pick').addEventListener('click', function () { $('n_file').click(); });
+  $('a_file').addEventListener('change', function (e) {
+    addPendingImages(e.target.files, 'vocab');
+    e.target.value = '';   // 允许重复选择同一文件
+  });
+  $('n_file').addEventListener('change', function (e) {
+    addPendingImages(e.target.files, 'note');
+    e.target.value = '';
+  });
+
+  // 剪贴板粘贴：截图直接在页面按 Ctrl/Cmd+V 即上传
+  // 仅在「自助新增 / 学习笔记」面板生效；焦点在输入框内时不拦截（避免打断文字粘贴）
+  document.addEventListener('paste', function (e) {
+    var items = e.clipboardData && e.clipboardData.items;
+    if (!items || !items.length) return;
+    var files = [];
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file' && /^image\//.test(items[i].type)) {
+        var f = items[i].getAsFile();
+        if (f) files.push(f);
+      }
+    }
+    if (!files.length) return;
+    var kind = currentImageKind();
+    if (!kind) return;
+    var ae = document.activeElement;
+    if (ae && (ae.tagName === 'TEXTAREA' || ae.tagName === 'INPUT')) return;
+    e.preventDefault();
+    addPendingImages(files, kind);
+    // 切到对应面板，让用户看到刚粘贴的图
+    showTab(kind === 'note' ? 'notes' : 'add');
+  });
 
   // ---------- 新增 / 修改词汇 ----------
   $('addForm').addEventListener('submit', function (e) {
@@ -367,7 +672,22 @@
     if (!zh || !en || !note) { setStatus('addStatus', '请填写中文/英文/解析', 'err'); return; }
 
     if (editingVocabId) {
-      // 修改模式：按 id 替换原词条（不新增）
+      if (String(editingVocabId).indexOf('ov:') === 0) {
+        // —— 修改预设词条（含 118 化学元素）：写入 overrides，不动 data.js ——
+        var k = editingVocabId;
+        var ov = userData.overrides[k] || (userData.overrides[k] = {});
+        // 空值字段存为空串，读取时回落到预设原值（例：韩语未填仍显示“需验证”）
+        ov.koRom = koRom || '';
+        ov.koMean = koMean || '';
+        ov.note = note || '';
+        ov.domain = $('a_domain').value;
+        ov.level = $('a_level').value;
+        ov.images = pendingVImages.slice();
+        ov.updatedAt = new Date().toISOString();
+        persistAndRender('修改预设词条: ' + zh, 'addStatus', resetAddForm);
+        return;
+      }
+      // —— 修改用户词条：按 id 原地替换 ——
       var hit = false;
       userData.vocab = userData.vocab.map(function (x) {
         if (String(x.id) !== String(editingVocabId)) return x;
@@ -376,6 +696,7 @@
           zh: zh, en: en,
           koRom: koRom || '需验证', koMean: koMean || '需验证',
           domain: $('a_domain').value, level: $('a_level').value, note: note,
+          images: pendingVImages.slice(),
           conf: (koRom && koMean) ? 'verified' : 'needs-check',
           updatedAt: new Date().toISOString()
         });
@@ -390,6 +711,7 @@
         koRom: koRom || '需验证', koMean: koMean || '需验证',
         domain: $('a_domain').value, level: $('a_level').value, note: note,
         conf: (koRom && koMean) ? 'verified' : 'needs-check',
+        images: pendingVImages.slice(),
         addedAt: new Date().toISOString()
       };
       userData.vocab.push(entry);
@@ -422,6 +744,12 @@
         (n.cat ? '<span class="nc">' + esc(n.cat) + '</span>' : '') + '</div>' +
         '<div class="nb">' + esc(n.body) + '</div>' +
         (n.tags ? '<div class="tags"># ' + esc(n.tags) + '</div>' : '') +
+        (Array.isArray(n.images) && n.images.length
+          ? '<div class="note-imgs">' + n.images.map(function (src, idx) {
+              return '<span class="thumb"><img src="' + src + '" alt="笔记配图" />' +
+                '<button type="button" class="img-del" data-nid="' + esc(n.id) + '" data-idx="' + idx + '" title="移除该图">×</button></span>';
+            }).join('') + '</div>'
+          : '') +
         '<div class="nd">' + esc(n.addedAt || '') + (n.updatedAt ? ' · 已修改 ' + esc(n.updatedAt) : '') + '</div>' +
         '<div class="note-actions">' +
         '<button class="edit-note" data-id="' + esc(n.id) + '">编辑</button>' +
@@ -443,10 +771,26 @@
       $('n_body').value = note.body || '';
       $('n_tags').value = note.tags || '';
       editingNoteId = note.id;
-      $('noteSubmit').value = '保存修改';
+      // 回填已有配图到待提交队列（保存后一并写回）
+      pendingNImages = Array.isArray(note.images) ? note.images.slice() : [];
+      drawNImages();
+      setBtnLabel($('noteSubmit'), '保存修改');
+      $('noteSubmit').classList.add('editing');
       $('noteCancel').style.display = '';
       showTab('notes');
       setStatus('noteStatus', '正在修改笔记，改完点“保存修改”。', '');
+      return;
+    }
+    // 移除笔记配图
+    var imgDel = e.target.closest('.note-imgs .img-del');
+    if (imgDel) {
+      var nid = imgDel.getAttribute('data-nid');
+      var rec = userData.notes.filter(function (x) { return String(x.id) === String(nid); })[0];
+      if (rec && Array.isArray(rec.images)) {
+        rec.images.splice(parseInt(imgDel.getAttribute('data-idx'), 10), 1);
+        rec.updatedAt = new Date().toISOString();
+        persistAndRender('移除笔记配图', 'noteList', function () { renderNotes(); });
+      }
       return;
     }
     var delBtn = e.target.closest('.del-note');
@@ -461,8 +805,11 @@
   function resetNoteForm() {
     $('noteForm').reset();
     editingNoteId = null;
-    $('noteSubmit').value = '保存笔记';
+    setBtnLabel($('noteSubmit'), '保存笔记');
+    $('noteSubmit').classList.remove('editing');
     $('noteCancel').style.display = 'none';
+    pendingNImages = [];
+    drawNImages();
   }
 
   // 取消笔记修改
@@ -486,6 +833,7 @@
         hit = true;
         return Object.assign({}, x, {
           title: title, cat: cat, body: body, tags: tags,
+          images: pendingNImages.slice(),
           updatedAt: new Date().toISOString()
         });
       });
@@ -495,6 +843,7 @@
       var note = {
         id: 'n' + Date.now(),
         title: title, cat: cat, body: body, tags: tags,
+        images: pendingNImages.slice(),
         addedAt: new Date().toISOString()
       };
       userData.notes.push(note);
@@ -505,17 +854,28 @@
   $('noteSearch').addEventListener('input', renderNotes);
 
   // ---------- 通用：提交 + 渲染 + 状态 ----------
+  // 写本地缓存：图片以 base64 存储，可能撑爆 localStorage 5MB 配额；
+  // 超出时仅跳过缓存，不阻断写库，避免整个保存动作失败。
+  function saveCache() {
+    try {
+      localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
+      return true;
+    } catch (e) {
+      return false;   // QuotaExceededError：本次不缓存，内容已在仓库中
+    }
+  }
+
   function persistAndRender(message, statusId, after) {
     commitUserData(message)
       .then(function () {
-        localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
-        setStatus(statusId, '已保存到仓库 ✓', 'ok');
+        var cached = saveCache();
+        setStatus(statusId, cached ? '已保存到仓库 ✓' : '已保存到仓库 ✓（图片过多，本机缓存未留存）', 'ok');
         renderVocab(); renderNotes(); renderStars();
         if (after) after();
       })
       .catch(function (err) {
         // 写库失败时仍保留本地缓存，避免丢失
-        localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
+        saveCache();
         setStatus(statusId, '保存失败：' + err.message + '（已存本地）', 'err');
         renderVocab(); renderNotes(); renderStars();
       });
@@ -552,7 +912,8 @@
       } else {
         userData.vocab = data.vocab || [];
         userData.notes = data.notes || [];
-        localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
+        userData.overrides = data.overrides || {};
+        saveCache();
         renderVocab(); renderNotes();
         setStatus('settingsStatus', '读取成功 ✓', 'ok');
         $('syncInfo').textContent = '已从仓库载入：词汇 ' + userData.vocab.length + ' 条，笔记 ' + userData.notes.length + ' 条。';
@@ -584,6 +945,7 @@
         userData.vocab = cached.vocab || [];
         userData.notes = cached.notes || [];
         userData.stars = cached.stars || [];
+        userData.overrides = cached.overrides || {};
       }
     } catch (e) { /* 缓存损坏则忽略 */ }
     renderVocab();
@@ -597,7 +959,8 @@
           userData.vocab = data.vocab || [];
           userData.notes = data.notes || [];
           userData.stars = data.stars || [];
-          localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
+          userData.overrides = data.overrides || {};
+          saveCache();
         }
         renderVocab(); renderNotes(); renderStars();
       }).catch(function () { /* 离线/未配置：仅用预设与本机缓存 */ });

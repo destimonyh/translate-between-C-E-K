@@ -37,7 +37,7 @@ const synthesis = [
   ['纯化', 'purification', '核心', '去除杂质以提高物质纯度的过程。', '퍼리피케이션', '정제'],
   ['浓缩', 'concentration', '基础', '去除溶剂提高溶液中溶质含量的操作。', '콘센트레이션', '농축'],
   ['干燥', 'drying', '基础', '去除样品中水分或溶剂的过程。', '드라이잉', '건조'],
-  ['官能团', 'functional group', '核心', '决定分子特征化学反应的原子组合。', '펑셔널 그룹', '작용기'],
+  ['官能团', 'functional group', '核心', '决定分子特征化学反应的原子组合。', 'jagyonggi', '작용기'],
   ['羟基', 'hydroxyl', '基础', '由氧和氢组成的 -OH 官能团。', '하이드록실', '수산기'],
   ['羰基', 'carbonyl', '基础', '由碳氧双键组成的 C=O 官能团。', '카보닐', '카보닐기'],
   ['氨基', 'amino', '基础', '由氮氢组成的 -NH2 官能团。', '아미노', '아미노기'],
@@ -45,7 +45,7 @@ const synthesis = [
   ['卤代', 'halogenation', '核心', '将卤素引入有机分子的反应。', '할로제네이션', '할로겐화'],
   ['亲核试剂', 'nucleophile', '核心', '富含电子、进攻带正电中心的试剂。', '뉴클레오파일', '친핵체'],
   ['亲电试剂', 'electrophile', '核心', '缺电子、被亲核中心进攻的试剂。', '일렉트로파일', '친전자체'],
-  ['配体', 'ligand', '核心', '通过配位键与中心原子结合的分子或离子。', '리간드', '리간드'],
+  ['配体', 'ligand', '核心', '通过配位键与中心原子结合的分子或离子。', 'rigandeu', '리간드'],
   ['催化剂', 'catalyst', '核心', '改变反应速率而本身不被消耗的物质。', '캐털리스트', '촉매'],
   ['氧化', 'oxidation', '核心', '失去电子或增加氧/减少氢的反应。', '옥시데이션', '산화'],
   ['还原', 'reduction', '核心', '得到电子或减少氧/增加氢的反应。', '리덕션', '환원'],
@@ -88,7 +88,7 @@ const synthesis = [
   ['饱和', 'saturation', '基础', '溶液浓度达最大、不再溶解的状态。', '새츄레이션', '포화'],
   ['沉淀', 'precipitate', '基础', '溶液中析出为固体的物质。', '프레시피테이트', '침전물'],
   ['络合', 'complexation', '核心', '中心原子与配体形成配位化合物的过程。', '콤플렉세이션', '착화'],
-  ['配位键', 'coordinate bond', '核心', '由一方提供电子对形成的共价键。', '코오디네이트 본드', '배위결합'],
+  ['配位键', 'coordinate bond', '核心', '由一方提供电子对形成的共价键。', 'baewigyeolhap', '배위 결합'],
   ['螯合', 'chelation', '最新', '多齿配体以多点配位包裹金属中心。', '킬레이션', '킬레이트화'],
   ['氧化还原电位', 'redox potential', '核心', '物质得失电子倾向的电动势量度。', '레독스 퍼텐셜', '산화환원전위'],
   ['电化学', 'electrochemistry', '核心', '研究电子转移与化学能相互转化的学科。', '일렉트로케미스트리', '전기화학'],
@@ -190,7 +190,7 @@ const synthesis = [
   ['重排', 'rearrangement', '核心', '分子内原子重排生成异构体。', '리어레인지먼트', '전위'],
   ['异构化', 'isomerization', '核心', '分子转变为其异构体的过程。', '아이소머라이제이션', '이성질화'],
   ['聚合诱发相分离', 'polymerization-induced phase separation', '最新', '聚合放热触发体系分相形成多孔。', '폴리머라이제이션-인듀스트 페이즈 세퍼레이션', '중합유도상분리'],
-  ['自组装', 'self-assembly', '最新', '组分依非共价作用自发形成有序结构。', '셀프 어셈블리', '자기조립'],
+  ['自组装', 'self-assembly', '最新', '组分依非共价作用自发形成有序结构。', 'jagijorip', '자기조립'],
   ['模板法', 'templating', '最新', '以模板限定产物形貌与孔结构。', '템플레이팅', '템플릿법'],
   ['水热', 'hydrothermal', '最新', '高温高压水溶液中的晶化合成。', '하이드로써멀', '수열'],
   ['溶剂热', 'solvothermal', '最新', '以非水溶剂在高温高压下合成。', '솔보써멀', '용매열'],
@@ -529,10 +529,10 @@ const packaging = [
 // ---------- 聚合 polymerization ----------
 const polymerization = [
   ['聚合', 'polymerization', '基础', '单体经键连形成高分子的过程。', '폴리머라이제이션', '중합'],
-  ['单体', 'monomer', '基础', '能聚合的最小重复单元。', '모노머', '단량체'],
-  ['聚合物', 'polymer', '基础', '由重复单元连接而成的大分子。', '폴리머', '고분자'],
+  ['单体', 'monomer', '基础', '能聚合的最小重复单元。', 'danryangche', '단량체'],
+  ['聚合物', 'polymer', '基础', '由重复单元连接而成的大分子。', 'gobunja', '고분자'],
   ['寡聚物', 'oligomer', '基础', '由少数单元组成的低聚体。', '올리고머', '올리고머'],
-  ['重复单元', 'repeat unit', '基础', '高分子链中重复的结构片段。', '리피트 유닛', '반복단위'],
+  ['重复单元', 'repeat unit', '基础', '高分子链中重复的结构片段。', 'banbokdanwi', '반복 단위'],
   ['均聚物', 'homopolymer', '基础', '由一种单体构成的高分子。', '호모폴리머', '단일중합체'],
   ['共聚物', 'copolymer', '核心', '由两种以上单体构成的高分子。', '코폴리머', '공중합체'],
   ['嵌段共聚物', 'block copolymer', '核心', '不同链段规整交替的高分子。', '블록 코폴리머', '블록공중합체'],
@@ -611,7 +611,7 @@ const polymerization = [
   ['丙烯酸酯', 'acrylate', '核心', 'UV 固化主要单体。', '아크릴레이트', '아크릴레이트'],
   ['甲基丙烯酸酯', 'methacrylate', '核心', '硬脆透明单体。', '메타크릴레이트', '메타크릴레이트'],
   ['乙烯基', 'vinyl', '基础', '含 CH2=CH- 的结构。', '비닐', '비닐'],
-  ['双键', 'double bond', '基础', '碳碳双键可聚合位点。', '더블 본드', '이중결합'],
+  ['双键', 'double bond', '基础', '碳碳双键可聚合位点。', 'ijunggyeolhap', '이중 결합'],
   ['官能度', 'functionality', '核心', '分子可反应的活性点数。', '펑셔널리티', '관능성'],
   ['竞聚率', 'reactivity ratio', '核心', '共聚中单体相对活性。', '리액티비티 레이쇼', '반응성비'],
   ['竞聚', 'copolymerization', '核心', '两单体共聚的速率关系。', '코폴리머라이제이션', '공중합'],
@@ -998,12 +998,16 @@ const elements = [
 ];
 
 // ---------- 编译 ----------
-function build(list, domain) {
-  return list.map((e) => {
+// key: 全库唯一的稳定主键（方向前缀 + 序号）。
+//   用途：前端“编辑预设词条”时以 key 为索引写入 overrides，不改动本文件与 data.js，
+//   避免用 zh/en 做键（库中 zh/en 存在重复项，如 转化率/转化率、monomer 出现两次）。
+function build(list, domain, idPrefix) {
+  return list.map((e, i) => {
     const [zh, en, level, note, koRom, koMean] = e;
     const hasKo = !!koRom && !!koMean;
     return {
       zh, en, domain, level, note,
+      key: idPrefix + '-' + String(i).padStart(4, '0'),
       koRom: koRom || '需验证',
       koMean: koMean || '需验证',
       conf: hasKo ? 'verified' : 'needs-check',
@@ -1011,18 +1015,84 @@ function build(list, domain) {
   });
 }
 
+
+// ---------- 有机化学结构术语（来自用户 Excel，含权威韩语）----------
+const organicSynth = [
+  ['主链', 'main chain / backbone', '核心', '高分子或分子中连续连接形成主轴的碳链。', 'jusaseul', '주사슬 / 백본'],
+  ['取代基', 'substituent', '核心', '取代母链上氢原子而连接的原子或基团。', 'chihwangi', '치환기'],
+  ['单键', 'single bond', '核心', '两原子共享一对电子形成的σ键。', 'danilgyeolhap', '단일 결합'],
+  ['电子密度', 'electron density', '核心', '空间某处电子出现概率的相对分布。', 'jeonjamildo', '전자 밀도'],
+  ['构象', 'conformation', '核心', '单键旋转所产生的不同空间排列。', 'ipchebaeyeol', '입체배열'],
+  ['侧链', 'side chain', '核心', '从主链分支伸出的较短链段。', 'gyeotsaseul', '곁사슬'],
+  ['电负性', 'electronegativity', '核心', '原子在成键时吸引电子的能力。', 'jeongieumseongdo', '전기음성도'],
+  ['构型', 'configuration', '核心', '不破键便无法互变的立体排列。', 'ipchebaechi', '입체배치'],
+  ['分支', 'branch', '核心', '主链上伸出的支化链段。', 'gaji', '가지'],
+  ['离去基团', 'leaving group', '核心', '反应中断裂脱离分子的基团。', 'italgi', '이탈기'],
+  ['三键', 'triple bond', '核心', '两原子共享三对电子的共价键。', 'samjunggyeolhap', '삼중 결합'],
+  ['诱导效应', 'inductive effect', '核心', '电负性差异沿σ键传递的电子偏移。', 'yudohyogwa', '유도 효과'],
+  ['顺式', 'cis', '核心', '相同取代基位于双键或环同侧的构型。', 'siseu', '시스'],
+  ['支链结构', 'branched structure', '核心', '主链带支化的聚合物拓扑结构。', 'gajigujo', '가지 구조'],
+  ['给电子基团', 'electron-donating group (EDG)', '核心', '向共轭体系推电子的取代基（EDG）。', 'jeonjagongyeogi', '전자공여기'],
+  ['σ键', 'sigma bond', '核心', '沿键轴头对头重叠形成的共价键。', 'sigeumagyeolhap', '시그마 결합'],
+  ['共振效应', 'resonance effect', '核心', '离域π电子使分子稳定的效应。', 'gongmyeonghyogwa', '공명 효과'],
+  ['反式', 'trans', '核心', '相同取代基位于双键或环异侧的构型。', 'teuraenseu', '트랜스'],
+  ['线性结构', 'linear structure', '核心', '无支化的线型链结构。', 'seonhyeonggujo', '선형 구조'],
+  ['吸电子基团', 'electron-withdrawing group (EWG)', '核心', '从共轭体系拉电子的取代基（EWG）。', 'jeonjaheubingi', '전자흡인기'],
+  ['π键', 'pi bond', '核心', '平行p轨道肩并肩重叠形成的键。', 'paigyeolhap', '파이 결합'],
+  ['共振结构', 'resonance structure', '核心', '同一分子的不同路易斯式表示。', 'gongmyeonggujo', '공명 구조'],
+  ['立体位阻', 'steric hindrance', '核心', '基团空间拥挤而对反应造成的阻碍。', 'ipchejangae', '입체 장애'],
+  ['环状结构', 'cyclic structure', '核心', '成环的碳骨架结构。', 'gorigujo', '고리 구조'],
+  ['活化基团', 'activating group', '核心', '提高芳环亲电取代活性的取代基。', 'hwalseonghwagi', '활성화기'],
+  ['共价键', 'covalent bond', '核心', '原子共享电子对形成的化学键。', 'gongyugyeolhap', '공유 결합'],
+  ['共振稳定', 'resonance stabilization', '核心', '电子离域使分子能量降低的现象。', 'gongmyeonganjeonghwa', '공명 안정화'],
+  ['空间结构', 'molecular geometry', '核心', '分子在三维空间中的排布（分子几何）。', 'bunjagihagujo', '분자 기하구조'],
+  ['芳香环', 'aromatic ring', '核心', '具芳香性的共轭环系（如苯环）。', 'banghyangjokgori', '방향족 고리'],
+  ['去活化基团', 'deactivating group', '核心', '降低芳环亲电取代活性的取代基。', 'bihwalseonghwagi', '비활성화기'],
+  ['电荷分布', 'charge distribution', '核心', '分子中正负电荷的空间分布。', 'jeonhabunpo', '전하 분포'],
+  ['键角', 'bond angle', '核心', '两化学键之间的夹角。', 'gyeolhapgak', '결합각'],
+  ['杂环', 'heterocycle', '核心', '环中含非碳原子的环状结构。', 'heterogori', '헤테로고리'],
+  ['极性基团', 'polar group', '核心', '电荷分布不均、具偶极的基团。', 'geukseonggi', '극성기'],
+  ['氢键', 'hydrogen bond', '核心', '氢与电负原子间形成的弱相互作用。', 'susogyeolhap', '수소 결합'],
+  ['正电荷中心', 'electrophilic center', '核心', '缺电子、易受亲核进攻的位置。', 'chinjeonjajungsim', '친전자 중심'],
+  ['键长', 'bond length', '核心', '两成键原子核间的平衡距离。', 'gyeolhapgiri', '결합 길이'],
+  ['共轭结构', 'conjugated structure', '核心', '交替双键使π电子离域的结构。', 'gongaekgujo', '공액 구조'],
+  ['非极性基团', 'nonpolar group', '核心', '电荷分布对称、无明显偶极的基团。', 'bigeukseonggi', '비극성기'],
+  ['范德华作用', 'van der Waals interaction', '核心', '分子间瞬时偶极产生的弱吸引。', 'bandereubalseusanghojagyong', '반데르발스 상호작용'],
+  ['负电荷中心', 'nucleophilic center', '核心', '富电子、易亲核进攻的位置。', 'chinhaekjungsim', '친핵 중심'],
+  ['配位中心', 'coordination center', '核心', '配合物中接受配位的中原子。', 'baewijungsim', '배위 중심'],
+  ['π共轭体系', 'π-conjugated system', '核心', '连续交替π键构成的离域体系。', 'gongaekgye', 'π 공액계'],
+];
+const organicPoly = [
+  ['交联结构', 'cross-linked structure', '核心', '链间以化学键连接成网络的结构。', 'gagyogujo', '가교 구조'],
+  ['网络结构', 'network structure', '核心', '三维交联的网状聚合物结构。', 'mangsanggujo', '망상 구조'],
+  ['分子量', 'molecular weight', '核心', '分子的相对分子质量。', 'bunjaryang', '분자량'],
+  ['分子骨架', 'molecular backbone', '核心', '分子中以碳为主干的主链骨架。', 'bunjagolgyeok', '분자 골격'],
+];
+const organicPR = [
+  ['有机骨架', 'organic framework', '核心', '分子中以碳为主干的骨架结构。', 'yugigolgyeok', '유기 골격'],
+  ['金属中心', 'metal center', '核心', '配合物中配体围绕的中心金属原子。', 'geumsokjungsim', '금속 중심'],
+  ['配位结构', 'coordination structure', '核心', '中心原子与配体配位形成的几何构型。', 'baewigujo', '배위 구조'],
+  ['有机-无机杂化结构', 'organic-inorganic hybrid structure', '核心', '有机与无机组分共构的材料结构。', 'yugimugihaibeurideugujo', '유기-무기 하이브리드 구조'],
+  ['纳米簇', 'nanocluster', '核心', '纳米尺度的原子或分子聚集体。', 'nanokeulreoseuteo', '나노 클러스터'],
+  ['分子组装', 'molecular assembly', '核心', '分子依非共价作用自发有序聚集。', 'bunjajorip', '분자 조립'],
+];
+
 const all = [
-  ...build(synthesis, '合成'),
-  ...build(photoresist, '光刻胶'),
-  ...build(packaging, '封装'),
-  ...build(polymerization, '聚合'),
-  ...build(scaleup, '量产扩大'),
-  ...build(elements, '化学元素'),
+  ...build(synthesis, '合成', 'syn'),
+  ...build(photoresist, '光刻胶', 'pr'),
+  ...build(packaging, '封装', 'pkg'),
+  ...build(polymerization, '聚合', 'pom'),
+  ...build(scaleup, '量产扩大', 'sup'),
+  ...build(elements, '化学元素', 'el'),
+  ...build(organicSynth, '合成', 'osy'),
+  ...build(organicPoly, '聚合', 'opk'),
+  ...build(organicPR, '光刻胶', 'opr'),
 ];
 
 const header = `/* 自动生成: generate_data.js — 共 ${all.length} 条
  * 字段: zh 中文 / en 英文 / koRom 韩文音译 / koMean 韩文释义
  *       domain 方向 / level 基础|核心|最新 / note 一句话解析
+ *       key   稳定唯一主键（前端编辑覆盖用）
  *       conf verified=韩语已核实 | needs-check=韩语需验证
  */
 window.CHEM_VOCAB = `;

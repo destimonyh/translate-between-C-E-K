@@ -144,6 +144,57 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .note-actions .del-note { color: #b23b3b; border-color: #e3c2c2; }
 .note-actions .del-note:hover { background: #fbeaea; }
 
+/* 图片上传（剪贴板粘贴 / 本地选择） */
+.img-field { gap: 6px; }
+.img-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hint-inline { font-size: 12px; color: var(--ink-soft); }
+.btn-sm { padding: 4px 12px; font-size: 12.5px; }
+.img-preview { display: flex; gap: 8px; flex-wrap: wrap; min-height: 0; }
+.img-preview .thumb { position: relative; width: 116px; }
+.img-preview img {
+  width: 116px; height: 84px; object-fit: cover; display: block;
+  border: 1px solid var(--line-strong); border-radius: var(--radius); background: #f4f2ec;
+}
+.img-preview .thumb .img-del,
+.card-imgs .thumb .img-del {
+  position: absolute; top: -7px; right: -7px;
+  width: 19px; height: 19px; line-height: 17px; text-align: center;
+  font-size: 12px; padding: 0; cursor: pointer; border-radius: 50%;
+  color: #b23b3b; background: #fff; border: 1px solid #e3c2c2;
+}
+.img-preview .thumb .img-del:hover,
+.card-imgs .thumb .img-del:hover { background: #fbeaea; }
+
+/* 卡片内配图 */
+.card-imgs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.card-imgs .thumb { position: relative; width: 104px; }
+.card-imgs img {
+  width: 104px; height: 76px; object-fit: cover; display: block;
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+
+/* 笔记内配图 */
+.note-imgs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.note-imgs .thumb { position: relative; width: 132px; }
+.note-imgs img {
+  width: 132px; height: 96px; object-fit: cover; display: block;
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+.note-imgs .thumb .img-del {
+  position: absolute; top: -7px; right: -7px;
+  width: 19px; height: 19px; line-height: 17px; text-align: center;
+  font-size: 12px; padding: 0; cursor: pointer; border-radius: 50%;
+  color: #b23b3b; background: #fff; border: 1px solid #e3c2c2;
+}
+
+/* 编辑预设词条时的模式提示 */
+.mode-hint {
+  margin: -8px 0 12px; padding: 6px 10px;
+  background: var(--accent-soft); border-left: 2px solid var(--accent);
+  color: var(--accent); font-size: 12.5px; border-radius: 0 3px 3px 0;
+}
+.tag.edited-tag { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
 /* Forms */
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-grid label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--ink-soft); }
@@ -158,6 +209,13 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 .btn:hover { border-color: var(--accent); }
 .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn.primary:hover { background: #163f6e; }
+/* 处于「修改」态的主按钮：加重描边 + 前置铅笔图标，避免与「新增」态混淆 */
+.btn.primary.editing {
+  background: var(--accent); color: #fff;
+  border-color: var(--accent); border-width: 2px;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.btn.primary.editing::before { content: "✎ "; font-weight: 700; }
 .status { font-size: 13px; color: var(--ink-soft); }
 .status.ok { color: var(--user); }
 .status.err { color: #b23b3b; }

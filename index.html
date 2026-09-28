@@ -61,6 +61,7 @@
     <section id="add" class="panel">
       <h2>自助新增三语词汇</h2>
       <p class="hint">新增内容将写入你的 GitHub 仓库（需先到“设置”配置仓库与令牌）。韩语格式示例：<code>配方 / formulation / 포뮬레이선 / 배합</code></p>
+      <p id="addModeHint" class="hint mode-hint" style="display:none"></p>
       <form id="addForm" class="form-grid">
         <label>中文<textarea id="a_zh" required placeholder="配方"></textarea></label>
         <label>English<textarea id="a_en" required placeholder="formulation"></textarea></label>
@@ -85,6 +86,15 @@
           </select>
         </label>
         <label class="span-2">一句话解析<textarea id="a_note" required placeholder="将多种组分按目标比例混合以得到特定性能的体系。"></textarea></label>
+        <label class="span-2 img-field">
+          <span>配图（可选，最多 8 张）</span>
+          <span class="img-actions">
+            <input type="file" id="a_file" accept="image/*" multiple hidden />
+            <button type="button" class="btn btn-sm" id="a_pick">选择图片</button>
+            <span class="hint-inline">或直接在页面按 Ctrl/Cmd + V 粘贴截图（编辑中词条时粘贴即归到该词条）</span>
+          </span>
+          <div id="a_imgs" class="img-preview"></div>
+        </label>
         <div class="span-2 form-actions">
           <button type="submit" class="btn primary" id="addSubmit">保存到仓库</button>
           <button type="button" class="btn" id="addCancel" style="display:none">取消修改</button>
@@ -102,6 +112,15 @@
         <label>分类<textarea id="n_cat" placeholder="酸碱理论"></textarea></label>
         <label class="span-2">正文 / 要点<textarea id="n_body" required placeholder="路易斯酸：能接受电子对的物种（如 BF₃、AlCl₃）…"></textarea></label>
         <label class="span-2">标签（逗号分隔）<textarea id="n_tags" placeholder="酸碱, 配位"></textarea></label>
+        <label class="span-2 img-field">
+          <span>配图（可选，最多 8 张）</span>
+          <span class="img-actions">
+            <input type="file" id="n_file" accept="image/*" multiple hidden />
+            <button type="button" class="btn btn-sm" id="n_pick">选择图片</button>
+            <span class="hint-inline">或直接在页面按 Ctrl/Cmd + V 粘贴截图</span>
+          </span>
+          <div id="n_imgs" class="img-preview"></div>
+        </label>
         <div class="span-2 form-actions">
           <button type="submit" class="btn primary" id="noteSubmit">保存笔记</button>
           <button type="button" class="btn" id="noteCancel" style="display:none">取消修改</button>
@@ -116,7 +135,7 @@
     <!-- ============ 设置 ============ -->
     <section id="settings" class="panel">
       <h2>GitHub 同步设置</h2>
-      <p class="hint">用于把“新增词汇”与“学习笔记”写回仓库，实现联网即可查询/新增（跨设备同步）。令牌仅存本机浏览器，建议使用<strong>细粒度令牌</strong>且仅授权目标仓库。</p>
+      <p class="hint">用于把“新增词汇”与“学习笔记”（含配图）写回仓库，实现联网即可查询/新增（跨设备同步）。令牌仅存本机浏览器，建议使用<strong>细粒度令牌</strong>且仅授权目标仓库。<br />配图会随数据整体写入仓库文件：图片会自动压缩（最长边 1280、单张 ≤ 约 500KB），单条目最多 8 张；若总量仍在超出仓库写入上限，页面会给出提示。</p>
       <form id="settingsForm" class="form-grid">
         <label>仓库所有者 (owner)<textarea id="s_owner" placeholder="your-github-id"></textarea></label>
         <label>仓库名 (repo)<textarea id="s_repo" placeholder="chem-lexicon"></textarea></label>
