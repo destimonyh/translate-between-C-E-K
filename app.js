@@ -8,6 +8,7 @@
   // ---------- 常量 ----------
   var SETTINGS_KEY = 'chem_settings';           // 仓库配置 + PAT（仅本机）
   var USERDATA_KEY = 'chem_userdata_cache';     // 用户数据的本地缓存（离线可读）
+  var SAVEDAT_KEY = 'chem_userdata_savedat';    // 仅保存「最后写入时间」，很小，主缓存溢出时仍可落盘
   var PRESET = (window.CHEM_VOCAB || []);        // 预设词汇（来自 data.js）
 
   // 内存中的用户数据；结构: { vocab: [], notes: [], stars: [], overrides: {} }
@@ -15,7 +16,14 @@
   // overrides—— 对「预设词条（含 118 化学元素）」的字段覆盖，键为 'ov:' + 词条 key。
   //              预设词库本身只读（data.js 由生成器产出），编辑内容单独存这里，
   //              避免把上千条预设词整体搬进用户数据文件。
-  var userData = { vocab: [], notes: [], stars: [], overrides: {} };
+  // savedAt —— 最后一次写入文件的时刻（ISO 字符串，随数据一起写进仓库）。
+  // 用于判断「本机缓存」与「刚拉到的远端数据」谁更新：
+  // raw.githubusercontent.com 有约 1 分钟级 CDN 缓存，刚写完后立刻刷新会读到旧快照，
+  // 若不做比对就会用旧快照覆盖刚保存的内容（表现为“保存成功但刷新后没变”）。
+  var userData = { vocab: [], notes: [], stars: [], overrides: {}, savedAt: '' };
+
+  // 最近一次成功写入得到的 commit sha（用于绕过 CDN 缓存精确读取）
+  var lastCommit = { sha: null, at: 0 };
 
   // 编辑态：
   //   editingVocabId 为 null            -> 新增模式
@@ -132,12 +140,14 @@
   }
 
   // ---------- GitHub 读写 ----------
-  // 读取用户数据：优先 raw（无需令牌，公开仓库）；失败且配有 PAT 时回退 API
-  function fetchUserData() {
+  // 读取用户数据：优先 raw（无需令牌，公开仓库）；失败且配有 PAT 时回退 API。
+  // ref 可选：传入 commit sha 时走「提交哈希路径」，可绕过 CDN 陈旧快照直接取最新内容
+  // （仅刚写入后短时间内使用，因为旧 CDN 节点上可能还没有这个 commit 的缓存）。
+  function fetchUserData(ref) {
     var s = loadSettings();
     if (!s.owner || !s.repo) return Promise.resolve(null);
     var rawUrl = 'https://raw.githubusercontent.com/' + s.owner + '/' + s.repo + '/' +
-      (s.branch || 'main') + '/' + (s.path || 'user-data.json');
+      (ref || s.branch || 'main') + '/' + (s.path || 'user-data.json');
     // fetch 可能抛同步异常（环境不支持 / 网络中断），统一兜底，避免阻断页面初始化
     var p;
     try {
@@ -219,8 +229,24 @@
       });
     }).then(function (r) {
       if (!r.ok) return r.json().then(function (e) { throw new Error((e && e.message) || ('写入失败 HTTP ' + r.status)); });
-      return r.json();
+      return r.json();   // { content: {...}, commit: { sha, ... } }
     });
+  }
+
+  // 远端数据是否比本机「旧」：以顶层 savedAt 时间戳比较（ISO 字符串可直接按字典序比时间）。
+  // 返回 true 表示这次读到的是过期快照，调用方应保留本机数据，不要覆盖。
+  function remoteIsStale(remote, localSavedAt) {
+    var rs = (remote && remote.savedAt) || '';
+    var ls = localSavedAt || '';
+    if (!ls) return false;                 // 本机无时间戳信息 → 无法判断，仍按原逻辑覆盖（兼容旧文件）
+    if (!rs) return true;                  // 远端是旧格式文件、本机却有更新时间戳 → 远端更旧
+    return rs < ls;
+  }
+
+  // 若本次会话刚刚写入过仓库，则优先用该 commit 的 sha 精确读取，绕开 CDN 快照
+  function freshRef() {
+    if (lastCommit.sha && (Date.now() - lastCommit.at) < 3 * 60 * 1000) return lastCommit.sha;
+    return null;
   }
 
   // ---------- 词汇库渲染 ----------
@@ -859,17 +885,27 @@
   function saveCache() {
     try {
       localStorage.setItem(USERDATA_KEY, JSON.stringify(userData));
+      localStorage.setItem(SAVEDAT_KEY, userData.savedAt || '');
       return true;
     } catch (e) {
-      return false;   // QuotaExceededError：本次不缓存，内容已在仓库中
+      // QuotaExceededError：主缓存写不下（多为图片过大），内容已在仓库中。
+      // 时间戳单独另存，否则刷新后无法识别“刚写入过”，会被 CDN 旧快照回滚。
+      try { localStorage.setItem(SAVEDAT_KEY, userData.savedAt || ''); } catch (e2) { /* 忽略 */ }
+      return false;
     }
   }
 
   function persistAndRender(message, statusId, after) {
     commitUserData(message)
-      .then(function () {
+      .then(function (res) {
+        // 记下本次写入的 commit sha：刷新后可用它精确读取，避免 CDN 旧快照把改动回滚掉
+        var sha = res && res.commit && res.commit.sha ? res.commit.sha : null;
+        lastCommit = { sha: sha, at: Date.now() };
+        userData.savedAt = new Date().toISOString();
         var cached = saveCache();
-        setStatus(statusId, cached ? '已保存到仓库 ✓' : '已保存到仓库 ✓（图片过多，本机缓存未留存）', 'ok');
+        setStatus(statusId, cached
+          ? '已保存到仓库 ✓（若刷新后未见更新，通常是 GitHub 缓存同步延迟，约 1–2 分钟后再次刷新即可）'
+          : '已保存到仓库 ✓（图片过多，本机缓存未留存；同上，刷新可能需要等一会儿）', 'ok');
         renderVocab(); renderNotes(); renderStars();
         if (after) after();
       })
@@ -905,18 +941,26 @@
   // 测试读取：验证仓库/路径/PAT 是否可用
   $('testSync').addEventListener('click', function () {
     setStatus('settingsStatus', '正在读取…', '');
-    fetchUserData().then(function (data) {
+    fetchUserData(freshRef()).then(function (data) {
       if (data == null) {
         setStatus('settingsStatus', '读取为空（文件可能尚未创建，新增后即生成）', 'ok');
         $('syncInfo').textContent = '仓库可访问，当前无用户数据。';
+      } else if (remoteIsStale(data, userData.savedAt)) {
+        // 旧快照：不覆盖本机，避免把本地改动抹掉
+        setStatus('settingsStatus', '仓库当前是旧快照（缓存同步中），已保留本机数据，稍后再试。', 'ok');
+        $('syncInfo').textContent = '远端时间戳 ' + (data.savedAt || '无') +
+          ' 早于本机 ' + (userData.savedAt || '无') + '，暂不覆盖；约 1–2 分钟后重新读取即可。';
       } else {
         userData.vocab = data.vocab || [];
         userData.notes = data.notes || [];
+        userData.stars = data.stars || [];
         userData.overrides = data.overrides || {};
+        if (data.savedAt) userData.savedAt = data.savedAt;
         saveCache();
         renderVocab(); renderNotes();
         setStatus('settingsStatus', '读取成功 ✓', 'ok');
-        $('syncInfo').textContent = '已从仓库载入：词汇 ' + userData.vocab.length + ' 条，笔记 ' + userData.notes.length + ' 条。';
+        $('syncInfo').textContent = '已从仓库载入：词汇 ' + userData.vocab.length + ' 条，笔记 ' +
+          userData.notes.length + ' 条，最后写入 ' + (userData.savedAt || '未知') + '。';
       }
     }).catch(function (err) {
       setStatus('settingsStatus', '读取失败：' + err.message, 'err');
@@ -946,6 +990,10 @@
         userData.notes = cached.notes || [];
         userData.stars = cached.stars || [];
         userData.overrides = cached.overrides || {};
+        userData.savedAt = cached.savedAt || '';
+      }
+      if (!userData.savedAt) {
+        try { userData.savedAt = localStorage.getItem(SAVEDAT_KEY) || ''; } catch (e) { /* 忽略 */ }
       }
     } catch (e) { /* 缓存损坏则忽略 */ }
     renderVocab();
@@ -954,13 +1002,18 @@
     // 再尝试从仓库拉取用户数据（在线时以仓库为准，覆盖缓存）
     var s = loadSettings();
     if (s.owner && s.repo) {
-      fetchUserData().then(function (data) {
-        if (data) {
+      // 刚写入过仓库时优先用 commit sha 读，取到的是最新内容而非 CDN 旧快照
+      fetchUserData(freshRef()).then(function (data) {
+        if (data && !remoteIsStale(data, userData.savedAt)) {
           userData.vocab = data.vocab || [];
           userData.notes = data.notes || [];
           userData.stars = data.stars || [];
           userData.overrides = data.overrides || {};
+          if (data.savedAt) userData.savedAt = data.savedAt;
           saveCache();
+        } else if (data) {
+          // 拉到的是过期快照：保住本机刚做的修改，不回滚
+          console.warn('[chem] 仓库读取为旧快照，已保留本机数据');
         }
         renderVocab(); renderNotes(); renderStars();
       }).catch(function () { /* 离线/未配置：仅用预设与本机缓存 */ });
