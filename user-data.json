@@ -112,17 +112,17 @@
     },
     {
       "id": "u1790150190413",
-      "zh": "三元组/三体 / 三连子 / 结构单元三联体",
-      "en": "triad",
-      "koRom": "트라이애드",
-      "koMean": "삼원자군 / 3원체 / 3연쇄",
-      "domain": "聚合",
+      "zh": "异丙醇",
+      "en": "Isopropanol / Isopropyl Alcohol (IPA)",
+      "koRom": "이소프로필 알코올",
+      "koMean": "이소프로판올",
+      "domain": "光刻胶",
       "level": "基础",
-      "note": "高分子链中连续的三个重复单元（모노머 单元）构成的序列结构。常用于通过核磁共振波谱（NMR）分析聚合物（폴리머）的立体规整性（如等规 isotactic、间规 syndiotactic、无规 atactic triad）以及共聚物序列分布，直接决定树脂的微观立体化学特征与热力学性能。",
+      "note": "常用的极性有机溶剂（CH₃CH(OH)CH₃）。在半导体光刻胶（Photoresist）与芯片制造工艺中，极高纯度（UP-grade）的 IPA 被广泛用作晶圆清洗剂、边缘清洗（EBR）辅助溶剂以及显影后的干燥冲洗剂（Marangoni 干燥），可有效降低表面张力并减少图形倒塌（Pattern Collapse）。",
       "conf": "verified",
       "addedAt": "2026-09-23T07:56:30.413Z",
       "images": [],
-      "updatedAt": "2026-09-28T03:54:55.963Z"
+      "updatedAt": "2026-09-29T03:54:20.715Z"
     },
     {
       "id": "u1790216933981",
@@ -368,5 +368,5 @@
     "p70"
   ],
   "overrides": {},
-  "savedAt": "2026-09-28T03:53:50.525Z"
+  "savedAt": "2026-09-28T03:54:58.973Z"
 }
