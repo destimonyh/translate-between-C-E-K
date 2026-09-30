@@ -268,6 +268,19 @@
       "conf": "verified",
       "images": [],
       "addedAt": "2026-09-29T05:12:18.601Z"
+    },
+    {
+      "id": "u1790733863674",
+      "zh": "单次通过 / 单道工艺 / 一次成型",
+      "en": "One-Pass",
+      "koRom": "원패스",
+      "koMean": "단일 공정 / 원패스",
+      "domain": "量产扩大",
+      "level": "核心",
+      "note": "指无需循环或多次重复，在单一流程/通道内即完成特定化学反应、加工或涂布的连续化工艺模式。在树脂与单体（모노머）的量产扩大（Pilot-scale / Commercial-scale）中，One-Pass 连续流反应（Continuous Flow）可显著缩短停留时间并提升收率；在光刻胶（Photoresist）涂布与封装涂层加工中，One-Pass 涂布技术能大幅提高生产效率并保证薄膜膜厚的一致性。",
+      "conf": "verified",
+      "images": [],
+      "addedAt": "2026-09-30T02:04:23.674Z"
     }
   ],
   "notes": [
@@ -394,5 +407,5 @@
     "p70"
   ],
   "overrides": {},
-  "savedAt": "2026-09-29T05:11:01.419Z"
+  "savedAt": "2026-09-29T05:12:21.150Z"
 }
