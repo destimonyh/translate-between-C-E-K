@@ -373,6 +373,19 @@
       "conf": "verified",
       "images": [],
       "addedAt": "2026-10-08T02:12:28.081Z"
+    },
+    {
+      "id": "u1792109956185",
+      "zh": "溶解速率",
+      "en": "Dissolution Rate",
+      "koRom": "용해 속도",
+      "koMean": "용해 속도",
+      "domain": "光刻胶",
+      "level": "核心",
+      "note": "指单位时间内高分子树脂（폴리머）或光刻胶（Photoresist）薄膜在特定显影液（Developer，如 TMAH 水溶液）中被溶解的厚度。溶解速率（Dissolution Rate）是评估光刻胶感光性能、对比度与分辨率的关键物理化学参数。在化学放大光刻胶中，通过光酸催化去保护反应改变树脂极性，使曝光区与未曝光区之间产生巨大的溶解速率差（Dissolution Rate Ratio, DRR），从而确保显影时获得陡峭的图形侧壁与极低的线边缘粗糙度（LER）。",
+      "conf": "verified",
+      "images": [],
+      "addedAt": "2026-10-16T00:19:16.185Z"
     }
   ],
   "notes": [
