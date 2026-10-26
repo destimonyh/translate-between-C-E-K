@@ -425,6 +425,32 @@
       "conf": "verified",
       "images": [],
       "addedAt": "2026-10-21T08:50:14.938Z"
+    },
+    {
+      "id": "u1792742715415",
+      "zh": "滤芯、卡套、柱芯、墨盒",
+      "en": "Cartridge",
+      "koRom": "카트리지",
+      "koMean": "카트리지",
+      "domain": "合成",
+      "level": "基础",
+      "note": "加热器中的加热管或替换套件",
+      "conf": "verified",
+      "images": [],
+      "addedAt": "2026-10-23T08:05:15.415Z"
+    },
+    {
+      "id": "u1792974552124",
+      "zh": "不间断电源",
+      "en": "Uninterruptible Power Supply (UPS)",
+      "koRom": "유피에스",
+      "koMean": "무정전 전원 장치",
+      "domain": "其他",
+      "level": "基础",
+      "note": "在半导体厂务与基础设施（Infrastructure）领域，UPS 泛指不间断电源（Uninterruptible Power Supply），是防止晶圆厂（Fab）因瞬间掉电或电网波动导致光刻机、干法刻蚀腔室（Chamber）及合成反应釜停运的核心保障设备。此外，在先进封装与晶圆减薄/键合（Bonding）工艺语境中，UPS 有时亦作为 Upper Side（上表面/顶面）的缩写，用以指定三维集成中的芯片或晶圆方位的空间定位。",
+      "conf": "verified",
+      "images": [],
+      "addedAt": "2026-10-26T00:29:12.124Z"
     }
   ],
   "notes": [
@@ -565,5 +591,5 @@
     "p20"
   ],
   "overrides": {},
-  "savedAt": "2026-10-23T01:22:25.340Z"
+  "savedAt": "2026-10-23T05:29:12.924Z"
 }
