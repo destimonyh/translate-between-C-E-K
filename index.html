@@ -47,7 +47,7 @@
         <span id="vocabCount" class="count"></span>
       </div>
       <div id="vocabList" class="vocab-list"></div>
-      <p class="hint">提示：任意词条（含内置预设词、118 化学元素）点击卡片上的「编辑」都可修改中文 / 英文 / 韩语 / 解析等；点「删除」可移除。预设词删除后不会真正消失，可在「设置 → 已删除的预设词」里一键恢复。</p>
+      <p class="hint">提示：任意词条（含内置预设词、118 化学元素）点击卡片上的「编辑」都可修改中文 / 英文 / 韩语 / 解析等；点「删除」会让你选择「彻底删除」或「软删除（可恢复）」，软删除的词可在「设置 → 已删除的词条」里一键恢复。</p>
     </section>
 
     <!-- ============ 星标词汇 ============ -->
@@ -99,6 +99,7 @@
         <div class="span-2 form-actions">
           <button type="submit" class="btn primary" id="addSubmit">保存到仓库</button>
           <button type="button" class="btn" id="addCancel" style="display:none">取消修改</button>
+          <button type="button" class="btn" id="addReset">重置</button>
           <span id="addStatus" class="status"></span>
         </div>
       </form>
@@ -152,7 +153,7 @@
       <div id="syncInfo" class="sync-info"></div>
       <hr />
       <details id="deletedPresetsBox" class="deleted-box">
-        <summary>已删除的预设词（可恢复）<span id="deletedCount" class="count"></span></summary>
+        <summary>已删除的词条（可恢复）<span id="deletedCount" class="count"></span></summary>
         <div id="deletedPresets" class="deleted-list"></div>
       </details>
     </section>
@@ -162,6 +163,21 @@
   <footer class="site-footer wrap">
     <p>预设词汇源自公开文献与行业术语整理；若标注 <span class="tag warn">需验证</span> 请以权威资料复核。数据仅作学习用途。</p>
   </footer>
+
+  <!-- 删除方式选择对话框 -->
+  <div id="delModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <h3>选择删除方式</h3>
+      <p class="hint">该词条会立即从词汇库移除。</p>
+      <p><strong>彻底删除</strong>：不可恢复，数据被永久移除。<br />
+      <strong>不彻底删除（可恢复）</strong>：词条进入「设置 → 已删除的词条」并带「已删除」标签，可随时恢复。</p>
+      <div class="modal-actions">
+        <button type="button" class="btn danger" id="delPermanent">彻底删除</button>
+        <button type="button" class="btn primary" id="delSoft">不彻底删除（可恢复）</button>
+        <button type="button" class="btn" id="delCancel">取消</button>
+      </div>
+    </div>
+  </div>
 
   <script src="data.js"></script>
   <script src="app.js"></script>

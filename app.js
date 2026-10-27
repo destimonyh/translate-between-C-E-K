@@ -25,6 +25,9 @@
   // 最近一次成功写入得到的 commit sha（用于绕过 CDN 缓存精确读取）
   var lastCommit = { sha: null, at: 0 };
 
+  // 删除对话框的暂存目标：{ id, key }；key 非空表示预设词（走 overrides），空表示用户词
+  var pendingDel = null;
+
   // 编辑态：
   //   editingVocabId 为 null            -> 新增模式
   //   以 'ov:' 开头                     -> 修改预设词条（写入 userData.overrides）
@@ -284,7 +287,7 @@
       o.conf = koDone(o) ? 'verified' : 'needs-check';
       return o;
     }).filter(function (x) { return x; });   // 去掉被删除（null）的预设词条
-    var user = userData.vocab.map(function (v) {
+    var user = (userData.vocab || []).filter(function (x) { return !x.removed; }).map(function (v) {
       var o = Object.assign({}, v, { source: 'user' });
       o._ovKey = '';
       o.conf = koDone(o) ? 'verified' : 'needs-check';
@@ -380,40 +383,50 @@
     starred.forEach(function (v) { container.appendChild(cardEl(v)); });
   }
 
-  // 列出「被删除的预设词」（overrides 中带 removed 标记者），提供一键恢复
+  // 列出「被软删除的词条」（预设词在 overrides 带 removed；用户词在 vocab 带 removed），
+  // 每条带「已删除」标签与独立的「恢复」按钮。
   function renderDeletedPresets() {
     var box = $('deletedPresets');
     if (!box) return;
     var overrides = userData.overrides || {};
-    var removed = [];
+    var items = [];
     PRESET.forEach(function (v, i) {
       var k = ovKey(v, i);
-      if (overrides[k] && overrides[k].removed) {
-        removed.push({ key: k, zh: v.zh, en: v.en });
+      if (overrides[k] && overrides[k].removed && !overrides[k].purged) {
+        items.push({ type: 'preset', key: k, id: '', zh: v.zh, en: v.en });
       }
     });
-    if ($('deletedCount')) $('deletedCount').textContent = removed.length ? '（' + removed.length + '）' : '';
-    if (!removed.length) {
-      box.innerHTML = '<p class="hint">暂无已删除的预设词。</p>';
+    (userData.vocab || []).forEach(function (w) {
+      if (w.removed) items.push({ type: 'user', key: '', id: String(w.id), zh: w.zh, en: w.en });
+    });
+    if ($('deletedCount')) $('deletedCount').textContent = items.length ? '（' + items.length + '）' : '';
+    if (!items.length) {
+      box.innerHTML = '<p class="hint">暂无已删除的词条。</p>';
       return;
     }
-    box.innerHTML = removed.map(function (r) {
-      return '<div class="deleted-item"><span>' + esc(r.zh) + ' / ' + esc(r.en) +
-        '</span><button type="button" class="btn btn-sm restore-btn" data-key="' + esc(r.key) +
-        '">恢复</button></div>';
+    box.innerHTML = items.map(function (it) {
+      var attr = it.type === 'preset'
+        ? 'data-key="' + esc(it.key) + '"'
+        : 'data-id="' + esc(it.id) + '"';
+      return '<div class="deleted-item"><span><span class="tag warn">已删除</span> ' + esc(it.zh) + ' / ' + esc(it.en) +
+        '</span><button type="button" class="btn btn-sm restore-btn" ' + attr + '>恢复</button></div>';
     }).join('');
   }
 
-  // 恢复被删除的预设词：清除 removed 标记
+  // 恢复被软删除的词条：清除 removed 标记（预设词清 overrides 标记；用户词清 vocab 标记）
   $('deletedPresets').addEventListener('click', function (e) {
     var btn = e.target.closest('.restore-btn');
     if (!btn) return;
-    var k = btn.getAttribute('data-key');
-    var ov = userData.overrides[k];
-    if (!ov) return;
-    delete ov.removed;
-    ov.updatedAt = new Date().toISOString();
-    persistAndRender('恢复预设词条', null, function () { renderVocab(); renderStars(); renderDeletedPresets(); });
+    var k = btn.getAttribute('data-key') || '';
+    var id = btn.getAttribute('data-id') || '';
+    if (k) {
+      var ov = userData.overrides[k];
+      if (ov) { delete ov.removed; delete ov.purged; ov.updatedAt = new Date().toISOString(); }
+    } else if (id) {
+      var w = userData.vocab.filter(function (x) { return String(x.id) === String(id); })[0];
+      if (w) { delete w.removed; w.updatedAt = new Date().toISOString(); }
+    }
+    persistAndRender('恢复词条', null, function () { renderVocab(); renderStars(); renderDeletedPresets(); });
   });
 
   // 统一重渲染（含已删除预设词列表）
@@ -518,22 +531,56 @@
       setStatus('addStatus', '正在修改词条，改完点“保存修改”。', '');
       return;
     }
-    // 3) 删除（全部词条：用户新增词直接移除；预设词打 removed 标记，存于 overrides 便于恢复）
+    // 3) 删除（全部词条）：弹出对话框，让用户自行选择「彻底删除」或「软删除（可恢复）」
     var delBtn = e.target.closest('.del-btn');
     if (!delBtn) return;
-    var did = delBtn.getAttribute('data-id');
-    var dk = delBtn.getAttribute('data-key') || '';
-    if (!confirm('确认删除该词条？' + (dk ? '（这是预设词条，删除记录会保存，可随时在“设置”里恢复）' : ''))) return;
-    if (dk) {
-      var dov = userData.overrides[dk] || {};
-      dov.removed = true;
-      dov.updatedAt = new Date().toISOString();
-      userData.overrides[dk] = dov;
-    } else {
-      userData.vocab = userData.vocab.filter(function (x) { return String(x.id) !== String(did); });
-    }
-    persistAndRender('删除词条', 'vocabList', function () { renderDeletedPresets(); });
+    pendingDel = { id: delBtn.getAttribute('data-id'), key: (delBtn.getAttribute('data-key') || '') };
+    $('delModal').style.display = 'flex';
   }
+
+  // —— 删除对话框：彻底删除 / 软删除（可恢复） ——
+  function closeDelModal() { pendingDel = null; $('delModal').style.display = 'none'; }
+
+  // 彻底删除：预设词无法改 data.js，故在 overrides 打 removed+purged（隐藏且不再出现在可恢复列表）；
+  //             用户词直接从 vocab 移除。
+  function performDeletePermanent() {
+    if (!pendingDel) return;
+    var d = pendingDel;
+    if (d.key) {
+      var ov = userData.overrides[d.key] || {};
+      ov.removed = true;
+      ov.purged = true;          // 彻底删除：隐藏且不提供恢复
+      ov.updatedAt = new Date().toISOString();
+      userData.overrides[d.key] = ov;
+    } else {
+      userData.vocab = userData.vocab.filter(function (x) { return String(x.id) !== String(d.id); });
+    }
+    closeDelModal();
+    persistAndRender('彻底删除词条', 'vocabList', function () { renderDeletedPresets(); });
+  }
+
+  // 软删除（可恢复）：预设词打 removed 标记；用户词打 removed 标记；二者都保留数据，进入「已删除」列表
+  function performDeleteSoft() {
+    if (!pendingDel) return;
+    var d = pendingDel;
+    if (d.key) {
+      var ov = userData.overrides[d.key] || {};
+      ov.removed = true;
+      ov.updatedAt = new Date().toISOString();
+      userData.overrides[d.key] = ov;
+    } else {
+      var w = userData.vocab.filter(function (x) { return String(x.id) === String(d.id); })[0];
+      if (w) { w.removed = true; w.updatedAt = new Date().toISOString(); }
+    }
+    closeDelModal();
+    persistAndRender('软删除词条（可恢复）', 'vocabList', function () { renderDeletedPresets(); });
+  }
+
+  $('delPermanent').addEventListener('click', performDeletePermanent);
+  $('delSoft').addEventListener('click', performDeleteSoft);
+  $('delCancel').addEventListener('click', closeDelModal);
+  // 点击遮罩空白处也取消
+  $('delModal').addEventListener('click', function (e) { if (e.target === $('delModal')) closeDelModal(); });
 
   // 移除某词条上的一张图（支持覆盖模式与用户词条两种存储）
   function removeVocabImage(ovKeyStr, id, idx) {
@@ -801,6 +848,12 @@
   $('addCancel').addEventListener('click', function () {
     resetAddForm();
     setStatus('addStatus', '', '');
+  });
+
+  // 「重置」：清空自助新增表单所有内容（无论新增还是编辑态），方便重新填写
+  $('addReset').addEventListener('click', function () {
+    resetAddForm();
+    setStatus('addStatus', '已清空，可重新填写。', '');
   });
 
   // ---------- 学习笔记 ----------
