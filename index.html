@@ -47,6 +47,7 @@
         <span id="vocabCount" class="count"></span>
       </div>
       <div id="vocabList" class="vocab-list"></div>
+      <p class="hint">提示：任意词条（含内置预设词、118 化学元素）点击卡片上的「编辑」都可修改中文 / 英文 / 韩语 / 解析等；点「删除」可移除。预设词删除后不会真正消失，可在「设置 → 已删除的预设词」里一键恢复。</p>
     </section>
 
     <!-- ============ 星标词汇 ============ -->
@@ -149,6 +150,11 @@
         </div>
       </form>
       <div id="syncInfo" class="sync-info"></div>
+      <hr />
+      <details id="deletedPresetsBox" class="deleted-box">
+        <summary>已删除的预设词（可恢复）<span id="deletedCount" class="count"></span></summary>
+        <div id="deletedPresets" class="deleted-list"></div>
+      </details>
     </section>
 
   </main>

@@ -267,13 +267,15 @@
     // 预设 + 用户；用户词条带 source/可删标记
     // 预置词无 id 时按数组下标补稳定 id（p0/p1…），用于星标标记
     var preset = PRESET.map(function (v, i) {
-      var o = Object.assign({}, v, { id: v.id || ('p' + i), source: 'preset' });
       var k = ovKey(v, i);
       var ov = overrides[k];
+      if (ov && ov.removed) return null;       // 已删除的预设词条：不进入列表（overrides 仍保留，便于恢复）
+      var o = Object.assign({}, v, { id: v.id || ('p' + i), source: 'preset' });
       o._ovKey = k;   // 所有预设词条都带覆盖键（编辑时据此写入 overrides）
       if (ov) {
         // 覆盖合并：只取用户实际填写过的字段（空串表示未填，回落到预设原值）
-        ['koRom', 'koMean', 'note', 'level', 'domain'].forEach(function (f) {
+        // 含 zh/en：预设词的中文、英文现在也允许用户修正（需求新增）
+        ['zh', 'en', 'koRom', 'koMean', 'note', 'level', 'domain'].forEach(function (f) {
           if (typeof ov[f] === 'string' && ov[f] !== '') o[f] = ov[f];
         });
         if (Array.isArray(ov.images)) o.images = ov.images.slice();
@@ -281,7 +283,7 @@
       }
       o.conf = koDone(o) ? 'verified' : 'needs-check';
       return o;
-    });
+    }).filter(function (x) { return x; });   // 去掉被删除（null）的预设词条
     var user = userData.vocab.map(function (v) {
       var o = Object.assign({}, v, { source: 'user' });
       o._ovKey = '';
@@ -378,6 +380,47 @@
     starred.forEach(function (v) { container.appendChild(cardEl(v)); });
   }
 
+  // 列出「被删除的预设词」（overrides 中带 removed 标记者），提供一键恢复
+  function renderDeletedPresets() {
+    var box = $('deletedPresets');
+    if (!box) return;
+    var overrides = userData.overrides || {};
+    var removed = [];
+    PRESET.forEach(function (v, i) {
+      var k = ovKey(v, i);
+      if (overrides[k] && overrides[k].removed) {
+        removed.push({ key: k, zh: v.zh, en: v.en });
+      }
+    });
+    if ($('deletedCount')) $('deletedCount').textContent = removed.length ? '（' + removed.length + '）' : '';
+    if (!removed.length) {
+      box.innerHTML = '<p class="hint">暂无已删除的预设词。</p>';
+      return;
+    }
+    box.innerHTML = removed.map(function (r) {
+      return '<div class="deleted-item"><span>' + esc(r.zh) + ' / ' + esc(r.en) +
+        '</span><button type="button" class="btn btn-sm restore-btn" data-key="' + esc(r.key) +
+        '">恢复</button></div>';
+    }).join('');
+  }
+
+  // 恢复被删除的预设词：清除 removed 标记
+  $('deletedPresets').addEventListener('click', function (e) {
+    var btn = e.target.closest('.restore-btn');
+    if (!btn) return;
+    var k = btn.getAttribute('data-key');
+    var ov = userData.overrides[k];
+    if (!ov) return;
+    delete ov.removed;
+    ov.updatedAt = new Date().toISOString();
+    persistAndRender('恢复预设词条', null, function () { renderVocab(); renderStars(); renderDeletedPresets(); });
+  });
+
+  // 统一重渲染（含已删除预设词列表）
+  function renderAll() {
+    renderVocab(); renderNotes(); renderStars(); renderDeletedPresets();
+  }
+
   function cardEl(v) {
     var el = document.createElement('div');
     var starred = isStarred(v.id);
@@ -391,8 +434,8 @@
       (v.conf === 'needs-check' ? '<span class="tag warn">需验证</span>' : '') +
       (v._ovDone ? '<span class="tag edited-tag">已编辑</span>' : '') +
       (v.source === 'user' ? '<span class="tag user">我添加</span>' : '');
-    var del = v.source === 'user'
-      ? '<button class="del-btn" data-id="' + esc(v.id) + '">删除</button>' : '';
+    // 全部词条均可删除：用户新增词从 vocab 移除；预设词打 removed 标记（存于 overrides，可恢复）
+    var del = '<button class="del-btn" data-id="' + esc(v.id) + '" data-key="' + esc(v._ovKey || '') + '">删除</button>';
     // 全部词条（预设 / 化学元素 / 用户新增）均可编辑：预设类走 overrides 覆盖模式
     var edt = '<button class="edit-btn" data-id="' + esc(v.id) + '" data-key="' + esc(v._ovKey || '') + '">编辑</button>';
     // 卡片配图：用户新增词、已被覆盖编辑的词、化学元素可移除配图
@@ -456,20 +499,18 @@
       $('a_domain').value = entry.domain || '合成';
       $('a_level').value = entry.level || '核心';
       $('a_note').value = entry.note || '';
-      // 预设词条：中文/英文为库内既有内容，锁定以免覆盖键与展示不一致
-      $('a_zh').readOnly = isPreset;
-      $('a_en').readOnly = isPreset;
-      // 锁定字段同时去掉必填校验：预设词的中文/英文本来就已有值，
-      // 若保留 required，部分浏览器会在提交时弹出“请填写此字段”并静默阻止保存。
-      $('a_zh').required = !isPreset;
-      $('a_en').required = !isPreset;
+      // 预设词条的中文 / 英文现在也允许编辑（需求新增），不再锁定
+      $('a_zh').readOnly = false;
+      $('a_en').readOnly = false;
+      $('a_zh').required = true;
+      $('a_en').required = true;
       editingVocabId = isPreset ? editBtn.getAttribute('data-key') : entry.id;
       setBtnLabel($('addSubmit'), '保存修改');
       $('addSubmit').classList.add('editing');   // 高亮，避免与「新增」态混淆
       $('addCancel').style.display = '';
       $('addModeHint').style.display = '';
       $('addModeHint').textContent = isPreset
-        ? '正在修改预设词条（中文 / 英文已锁定，可补填或修正韩语、解析、方向、层级与配图）。'
+        ? '正在修改预设词条（中文 / 英文 / 韩语 / 解析 / 方向 / 层级 / 配图均可改，改完点“保存修改”）。'
         : '正在修改词条，改完点“保存修改”。';
       pendingVImages = Array.isArray(entry.images) ? entry.images.slice() : [];
       drawVImages();
@@ -477,13 +518,21 @@
       setStatus('addStatus', '正在修改词条，改完点“保存修改”。', '');
       return;
     }
-    // 3) 删除（仅用户词条）
+    // 3) 删除（全部词条：用户新增词直接移除；预设词打 removed 标记，存于 overrides 便于恢复）
     var delBtn = e.target.closest('.del-btn');
     if (!delBtn) return;
     var did = delBtn.getAttribute('data-id');
-    if (!confirm('确认删除该词条？')) return;
-    userData.vocab = userData.vocab.filter(function (x) { return String(x.id) !== String(did); });
-    persistAndRender('删除词条', 'vocabList');
+    var dk = delBtn.getAttribute('data-key') || '';
+    if (!confirm('确认删除该词条？' + (dk ? '（这是预设词条，删除记录会保存，可随时在“设置”里恢复）' : ''))) return;
+    if (dk) {
+      var dov = userData.overrides[dk] || {};
+      dov.removed = true;
+      dov.updatedAt = new Date().toISOString();
+      userData.overrides[dk] = dov;
+    } else {
+      userData.vocab = userData.vocab.filter(function (x) { return String(x.id) !== String(did); });
+    }
+    persistAndRender('删除词条', 'vocabList', function () { renderDeletedPresets(); });
   }
 
   // 移除某词条上的一张图（支持覆盖模式与用户词条两种存储）
@@ -703,6 +752,9 @@
         var k = editingVocabId;
         var ov = userData.overrides[k] || (userData.overrides[k] = {});
         // 空值字段存为空串，读取时回落到预设原值（例：韩语未填仍显示“需验证”）
+        // zh/en 现在也作为可覆盖字段（预设词修正中英文）
+        ov.zh = zh || '';
+        ov.en = en || '';
         ov.koRom = koRom || '';
         ov.koMean = koMean || '';
         ov.note = note || '';
@@ -906,14 +958,14 @@
         setStatus(statusId, cached
           ? '已保存到仓库 ✓（若刷新后未见更新，通常是 GitHub 缓存同步延迟，约 1–2 分钟后再次刷新即可）'
           : '已保存到仓库 ✓（图片过多，本机缓存未留存；同上，刷新可能需要等一会儿）', 'ok');
-        renderVocab(); renderNotes(); renderStars();
+        renderAll();
         if (after) after();
       })
       .catch(function (err) {
         // 写库失败时仍保留本地缓存，避免丢失
         saveCache();
         setStatus(statusId, '保存失败：' + err.message + '（已存本地）', 'err');
-        renderVocab(); renderNotes(); renderStars();
+        renderAll();
       });
   }
 
@@ -957,7 +1009,7 @@
         userData.overrides = data.overrides || {};
         if (data.savedAt) userData.savedAt = data.savedAt;
         saveCache();
-        renderVocab(); renderNotes();
+        renderAll();
         setStatus('settingsStatus', '读取成功 ✓', 'ok');
         $('syncInfo').textContent = '已从仓库载入：词汇 ' + userData.vocab.length + ' 条，笔记 ' +
           userData.notes.length + ' 条，最后写入 ' + (userData.savedAt || '未知') + '。';
@@ -996,9 +1048,7 @@
         try { userData.savedAt = localStorage.getItem(SAVEDAT_KEY) || ''; } catch (e) { /* 忽略 */ }
       }
     } catch (e) { /* 缓存损坏则忽略 */ }
-    renderVocab();
-    renderNotes();
-    renderStars();
+    renderAll();
     // 再尝试从仓库拉取用户数据（在线时以仓库为准，覆盖缓存）
     var s = loadSettings();
     if (s.owner && s.repo) {
@@ -1015,7 +1065,7 @@
           // 拉到的是过期快照：保住本机刚做的修改，不回滚
           console.warn('[chem] 仓库读取为旧快照，已保留本机数据');
         }
-        renderVocab(); renderNotes(); renderStars();
+        renderAll();
       }).catch(function () { /* 离线/未配置：仅用预设与本机缓存 */ });
     }
   }

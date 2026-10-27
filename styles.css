@@ -233,6 +233,15 @@ hr { border: none; border-top: 1px solid var(--line); margin: 26px 0 16px; }
 
 .sync-info { margin-top: 16px; font-size: 12.5px; color: var(--ink-soft); white-space: pre-wrap; }
 
+/* 已删除预设词（可恢复） */
+.deleted-box { margin-top: 18px; font-size: 13.5px; }
+.deleted-box summary { cursor: pointer; color: var(--ink-soft); user-select: none; }
+.deleted-box summary:hover { color: var(--accent); }
+.deleted-list { margin-top: 10px; }
+.deleted-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; }
+.deleted-item .restore-btn { white-space: nowrap; }
+
 /* Footer */
 .site-footer { border-top: 1px solid var(--line); padding: 16px 20px 40px; color: var(--ink-soft); font-size: 12px; }
 
