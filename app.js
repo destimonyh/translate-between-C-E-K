@@ -329,7 +329,8 @@
         else if (v.level !== fl) return false;
       }
       if (q) {
-        var hay = (v.zh + ' ' + v.en + ' ' + v.koRom + ' ' + v.koMean + ' ' + (v.note || '')).toLowerCase();
+        // 仅匹配单词名称（中 / 英 / 韩式发音 / 韩文含义），排除解释(note)命中
+        var hay = (v.zh + ' ' + v.en + ' ' + v.koRom + ' ' + v.koMean).toLowerCase();
         if (hay.indexOf(q) === -1) return false;
       }
       return true;
