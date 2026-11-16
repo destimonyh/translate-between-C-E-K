@@ -317,6 +317,14 @@
     persistAndRender('toggle star ' + id, null, function () { renderVocab(); renderStars(); });
   }
 
+  // 名称搜索匹配规则（词汇库 / 星标词汇共用，保证两处行为一致）
+  // 仅匹配单词名称字段（中 / 英 / 韩式发音 / 韩文含义），排除解释 note
+  function nameMatches(v, q) {
+    if (!q) return true;
+    var hay = (v.zh + ' ' + v.en + ' ' + v.koRom + ' ' + v.koMean).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  }
+
   function renderVocab() {
     var q = $('search').value.trim().toLowerCase();
     var fd = $('filterDomain').value;
@@ -328,11 +336,7 @@
         if (fl === '__user__') { if (v.source !== 'user') return false; }
         else if (v.level !== fl) return false;
       }
-      if (q) {
-        // 仅匹配单词名称（中 / 英 / 韩式发音 / 韩文含义），排除解释(note)命中
-        var hay = (v.zh + ' ' + v.en + ' ' + v.koRom + ' ' + v.koMean).toLowerCase();
-        if (hay.indexOf(q) === -1) return false;
-      }
+      if (!nameMatches(v, q)) return false;
       return true;
     });
 
@@ -374,11 +378,17 @@
   function renderStars() {
     var container = $('starsList');
     if (!container) return;
-    var starred = getAllVocab().filter(function (v) { return isStarred(v.id); });
+    var q = $('starSearch').value.trim().toLowerCase();
+    // 先取全部星标词，再按名称搜索过滤（与词汇库同一规则：仅匹配名称，排除解释）
+    var starred = getAllVocab().filter(function (v) {
+      return isStarred(v.id) && nameMatches(v, q);
+    });
     container.innerHTML = '';
     $('starsCount').textContent = '共 ' + starred.length + ' 条';
     if (!starred.length) {
-      container.innerHTML = '<p class="hint">暂无星标词汇。在“词汇库”点击卡片右下角的 ☆ 即可收藏，便于重点学习。</p>';
+      // 有搜索词时区分“无匹配”与“暂无收藏”，避免误导
+      if (q) container.innerHTML = '<p class="hint">无匹配词条。</p>';
+      else container.innerHTML = '<p class="hint">暂无星标词汇。在“词汇库”点击卡片右下角的 ☆ 即可收藏，便于重点学习。</p>';
       return;
     }
     starred.forEach(function (v) { container.appendChild(cardEl(v)); });
@@ -1084,6 +1094,7 @@
   $('search').addEventListener('input', renderVocab);
   $('filterDomain').addEventListener('change', renderVocab);
   $('filterLevel').addEventListener('change', renderVocab);
+  $('starSearch').addEventListener('input', renderStars);
 
   // ---------- 初始化 ----------
   function init() {
